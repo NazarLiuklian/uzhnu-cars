@@ -1,54 +1,59 @@
-import { Camera, Mail, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 
 export function ProfilePage() {
+  const [saved, setSaved] = useState(false)
+
   return (
-    <section className="page-section profile-page">
-      <div className="page-intro">
-        <div>
-          <span className="eyebrow">Ваш простір</span>
-          <h1>Налаштування профілю</h1>
-          <p>Керуйте персональними даними та налаштуваннями доступу.</p>
+    <section className="profile-page">
+      <Card className="profile-settings-card">
+        <div className="profile-settings-heading">
+          <h1>Налаштування облікового запису</h1>
+          <p>Керування особистими даними, поштою та безпекою</p>
         </div>
-      </div>
-      <Card className="profile-card">
-        <div className="profile-identity">
-          <div className="avatar">
-            НЛ
-            <button type="button" aria-label="Змінити аватар">
-              <Camera size={14} />
-            </button>
-          </div>
+        <div className="profile-avatar-row">
+          <div className="avatar avatar--large">НЛ</div>
           <div>
-            <h2>Люклян Назар</h2>
-            <p>Студент · Користувач з 2026 року</p>
+            <span className="profile-field-title">Фотографія профілю (Аватарка)</span>
+            <div className="profile-avatar-actions">
+              <Button variant="secondary">Завантажити нове фото</Button>
+              <button className="text-button text-button--danger" type="button">Видалити</button>
+            </div>
           </div>
         </div>
-        <div className="profile-divider" />
-        <div className="profile-form">
-          <Input id="name" label="Ім’я та прізвище" defaultValue="Люклян Назар" />
-          <Input id="nickname" label="Нікнейм" defaultValue="nazar_liuklian" />
+        <div className="profile-settings-section">
+          <h2>Особисті дані</h2>
+          <div className="profile-fields profile-fields--two">
+            <Input id="full-name" label="Ім'я та прізвище" defaultValue="Назар Люклян" />
+            <Input id="nickname" label="Нікнейм користувача" defaultValue="nazar_liuklian" />
+          </div>
+        </div>
+        <div className="profile-settings-section">
+          <h2>Контактна пошта</h2>
           <label className="field">
-            <span className="field__label">Корпоративна пошта</span>
-            <div className="input-with-icon">
-              <Mail size={16} />
-              <input className="input" value="nazar.liuklian@student.uzhnu.edu.ua" readOnly />
+            <span className="field__label">Адреса електронної пошти</span>
+            <div className="profile-email-row">
+              <input className="input" type="email" defaultValue="nazar.liuklian@uzhnu.edu.ua" />
+              <Button variant="soft">Змінити пошту</Button>
             </div>
+            <span className="field__hint">На нову пошту буде надіслано лист із посиланням для підтвердження</span>
           </label>
         </div>
-        <div className="password-section">
-          <div>
-            <h3>Зміна пароля</h3>
-            <p>Рекомендуємо використовувати унікальний пароль.</p>
+        <div className="profile-settings-section profile-settings-section--security">
+          <h2>Безпека (Зміна пароля)</h2>
+          <Input id="current-password" type="password" label="Поточний пароль" placeholder="••••••••••••" />
+          <div className="profile-fields profile-fields--two">
+            <Input id="new-password" type="password" label="Новий пароль" placeholder="Введіть новий пароль" />
+            <Input id="repeat-password" type="password" label="Повторіть новий пароль" placeholder="Повторіть пароль" />
           </div>
-          <Input id="password-new" type="password" placeholder="Новий пароль" />
         </div>
-        <Button>Зберегти зміни</Button>
-        <div className="privacy-note">
-          <ShieldCheck size={16} /> Дані профілю доступні лише вам та адміністраторам платформи.
+        <div className="profile-actions">
+          <Button variant="ghost">Скасувати</Button>
+          <Button onClick={() => setSaved(true)}>Зберегти всі зміни</Button>
         </div>
+        {saved && <span className="save-confirmation">Зміни збережено</span>}
       </Card>
     </section>
   )

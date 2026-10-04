@@ -4,18 +4,8 @@ import { Card } from '../components/ui/Card'
 import { AddCarForm } from '../features/add-car/AddCarForm'
 import { useState } from 'react'
 
-const initialSubmissions = [
-  {
-    id: 'published-audi',
-    title: 'Audi A6 · 2020',
-    status: 'Опубліковано',
-    tone: 'green',
-    date: '28 жовтня 2026',
-  },
-]
-
 export function AddCarPage() {
-  const [submissions, setSubmissions] = useState(initialSubmissions)
+  const [submissions, setSubmissions] = useState([])
 
   const handleSubmit = (car) => {
     setSubmissions((current) => [
@@ -36,13 +26,6 @@ export function AddCarPage() {
 
   return (
     <section className="page-section">
-      <div className="page-intro">
-        <div>
-          <span className="eyebrow">Краудсорсинг</span>
-          <h1>Додати автомобіль</h1>
-          <p>Допоможіть нам зробити каталог УжНУ повнішим.</p>
-        </div>
-      </div>
       <div className="auth-notice">
         <ClipboardCheck size={22} />
         <span>
@@ -52,25 +35,25 @@ export function AddCarPage() {
       <Card className="form-card">
         <div className="card-heading">
           <div>
-            <h2>Анкета автомобіля</h2>
-            <p>Поля позначені зірочкою є обов’язковими.</p>
+            <h2>Запропонувати авто викладача</h2>
+            <p>Заповніть детальну інформацію про автомобіль для перевірки модератором.</p>
           </div>
+          <Badge tone="green">Автор: student@uzhnu.edu.ua</Badge>
         </div>
         <AddCarForm onSubmit={handleSubmit} />
       </Card>
       <div className="history-section">
-        <div className="section-heading">
-          <span className="eyebrow">Ваші внески</span>
-          <h2>Історія пропозицій</h2>
+        <div className="section-heading section-heading--history">
+          <div>
+            <h2>Історія ваших пропозицій</h2>
+            <p>Статус перевірки надісланих вами автомобілів адміністрацією</p>
+          </div>
+          <span className="history-total">Всього: 2 авто</span>
         </div>
         <div className="history-list">
-          {submissions.map((submission) => (
-            <div key={submission.id} data-testid="submission-item">
-              <span>{submission.title}</span>
-              <Badge tone={submission.tone}>{submission.status}</Badge>
-              <small>{submission.date}</small>
-            </div>
-          ))}
+          <div className="history-card history-card--pending"><span className="history-icon">⏳</span><div><strong>Skoda Fabia (2015, 1.4 TDI)</strong><small>Викладач: Семків О. М. • Кафедра ІСТ • Надіслано сьогодні</small></div><Badge tone="amber">На модерації ⏳</Badge></div>
+          <div className="history-card history-card--published"><span className="history-icon">✅</span><div><strong>BMW 3 Series (2019, 2.0 Petrol)</strong><small>Викладач: Бучук Р. Ю. • Кафедра ІМЗ • Опубліковано в каталозі</small></div><Badge tone="green">Опубліковано ✅</Badge></div>
+          {submissions.map((submission) => <div className="history-card" key={submission.id} data-testid="submission-item"><span className="history-icon">⏳</span><div><strong>{submission.title}</strong><small>{submission.date}</small></div><Badge tone={submission.tone}>{submission.status}</Badge></div>)}
         </div>
       </div>
     </section>

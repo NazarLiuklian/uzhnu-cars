@@ -13,11 +13,11 @@ export default function App() {
 
   return (
     <Routes>
-      <Route element={<MainLayout />}>
+      <Route element={<MainLayout isAuthenticated={isAuthenticated} />}>
         <Route path="/" element={<CatalogPage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/add-car" element={isAuthenticated ? <AddCarPage /> : <AuthGatePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile" element={isAuthenticated ? <ProfilePage /> : <AuthGatePage />} />
       </Route>
       <Route path="/auth" element={<AuthPage onLogin={() => setIsAuthenticated(true)} />} />
       <Route path="*" element={<Navigate to="/" replace />} />

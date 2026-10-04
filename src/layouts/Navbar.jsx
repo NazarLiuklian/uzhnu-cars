@@ -1,4 +1,4 @@
-import { BarChart3, CarFront, PlusCircle, UserRound } from 'lucide-react'
+import { BarChart3, CarFront, LockKeyhole, PlusCircle } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const links = [
@@ -7,7 +7,7 @@ const links = [
   { to: '/add-car', label: 'Додати авто', icon: PlusCircle },
 ]
 
-export function Navbar() {
+export function Navbar({ isAuthenticated }) {
   return (
     <header className="navbar">
       <NavLink className="brand" to="/">
@@ -20,13 +20,18 @@ export function Navbar() {
         {links.map(({ to, label, icon: Icon }) => (
           <NavLink className="nav-link" to={to} key={to}>
             <Icon size={17} /> {label}
+            {to === '/add-car' && !isAuthenticated && <LockKeyhole size={14} />}
           </NavLink>
         ))}
       </nav>
-      <NavLink className="profile-link" to="/profile" aria-label="Профіль">
-        <UserRound size={18} />
-        <span className="profile-link__text">Профіль</span>
-      </NavLink>
+      {isAuthenticated ? (
+        <NavLink className="profile-link profile-link--user" to="/profile" aria-label="Профіль Назар Люклян">
+          <span className="avatar avatar--nav">НЛ</span>
+          <span className="profile-link__text">Назар Люклян</span>
+        </NavLink>
+      ) : (
+        <NavLink className="profile-link" to="/auth">Увійти</NavLink>
+      )}
     </header>
   )
 }
