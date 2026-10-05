@@ -2,11 +2,11 @@ import { Outlet } from 'react-router-dom'
 import { Footer } from './Footer'
 import { Navbar } from './Navbar'
 
-export function MainLayout({ isAuthenticated }) {
+export function MainLayout() {
   return (
-    <div className="app-shell">
-      <Navbar isAuthenticated={isAuthenticated} />
-      <main className="main-content">
+    <div>
+      <Navbar />
+      <main>
         <Outlet />
       </main>
       <Footer />

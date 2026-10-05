@@ -1,7 +1,3 @@
-export function Card({ children, className = '', ...props }) {
-  return (
-    <article className={`card ${className}`} {...props}>
-      {children}
-    </article>
-  )
+export function Card({ children }) {
+  return <div>{children}</div>
 }
