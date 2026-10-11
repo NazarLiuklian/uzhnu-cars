@@ -1,0 +1,181 @@
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.engineChartArea {
+  height: 11rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.progressBar {
+  width: 100%;
+  background-color: #f1f5f9;
+  height: 1.5rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.progressElectro {
+  background-color: #10b981;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.progressIce {
+  background-color: #f59e0b;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.engineBoxes {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  text-align: center;
+}
+
+.statBox {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  width: 9rem;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.statBoxElectro {
+  background-color: #ecfdf5;
+  border-color: #d1fae5;
+}
+
+.statBoxIce {
+  background-color: #fffbeb;
+  border-color: #fef3c7;
+}
+
+.statValue {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.statValueElectro {
+  color: #047857;
+}
+
+.statValueIce {
+  color: #b45309;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.statLabelElectro {
+  color: #059669;
+}
+
+.statLabelIce {
+  color: #d97706;
+}
+
+.barChartArea {
+  height: 11rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.metricCard {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.metricNumber {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #0284c7;
+  display: block;
+  line-height: 1.2;
+}
+
+.metricLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .chartsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
