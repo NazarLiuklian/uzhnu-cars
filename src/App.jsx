@@ -16,6 +16,8 @@ function parseInitialView() {
   return 'catalog'
 }
 
+const unusedVar = 123
+
 export default function App() {
   const [activeView, setActiveView] = useState(parseInitialView)
   const [user, setUser] = useState(null)
