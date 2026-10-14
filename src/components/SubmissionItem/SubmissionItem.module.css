@@ -1,0 +1,92 @@
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 1rem;
+  border-width: 1px;
+  border-style: solid;
+  gap: 1rem;
+}
+
+.itemPending {
+  background-color: rgba(254, 243, 199, 0.5);
+  border-color: rgba(253, 230, 138, 0.6);
+}
+
+.itemApproved {
+  background-color: rgba(236, 253, 245, 0.5);
+  border-color: rgba(167, 243, 208, 0.6);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconBox {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border-width: 1px;
+  border-style: solid;
+  flex-shrink: 0;
+}
+
+.iconBoxPending {
+  color: #d97706;
+  border-color: #fde68a;
+}
+
+.iconBoxApproved {
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0.125rem 0 0 0;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-width: 1px;
+  border-style: solid;
+  white-space: nowrap;
+}
+
+.badgePending {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.badgeApproved {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+@media (max-width: 640px) {
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
