@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from './ProfilePage.module.css'
 
-export function ProfilePage({ user, onUpdateUser, goTo }) {
+export function ProfilePage({ user, onUpdateUser }) {
+  const navigate = useNavigate()
   const [fullName, setFullName] = useState(user?.name || 'Назар Люклян')
   const [username, setUsername] = useState('nazar_liuklian')
   const [email, setEmail] = useState(user?.email || 'nazar.liuklian@uzhnu.edu.ua')
@@ -17,7 +19,7 @@ export function ProfilePage({ user, onUpdateUser, goTo }) {
         email,
       })
     }
-    goTo('catalog')
+    navigate('/')
   }
 
   return (
@@ -129,7 +131,7 @@ export function ProfilePage({ user, onUpdateUser, goTo }) {
         </div>
 
         <div className={styles.actionsRow}>
-          <button type="button" onClick={() => goTo('catalog')} className={styles.cancelBtn}>
+          <button type="button" onClick={() => navigate('/')} className={styles.cancelBtn}>
             Скасувати
           </button>
           <button type="button" onClick={handleSave} className={styles.saveBtn}>

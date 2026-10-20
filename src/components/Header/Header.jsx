@@ -1,59 +1,58 @@
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import styles from './Header.module.css'
 
-export function Header({ activeView, goTo, user, onLogout }) {
-  if (activeView === 'login') {
+export function Header({ user, onLogout }) {
+  const location = useLocation()
+  const isAuth = Boolean(user)
+  const isLoginPage = location.pathname === '/login'
+  const isProfilePage = location.pathname === '/profile'
+
+  if (isLoginPage) {
     return (
       <header className={styles.header}>
         <div className={styles.container}>
-          <div className={styles.brand} onClick={() => goTo('catalog')}>
+          <Link to="/" className={styles.brand}>
             <div className={styles.logoBadge}>🚗 УжНУ Cars</div>
-          </div>
+          </Link>
           <span className={styles.authBadge}>Система автентифікації</span>
         </div>
       </header>
     )
   }
 
-  const isAuth = Boolean(user)
-
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <div className={styles.brand} onClick={() => goTo('catalog')}>
+        <Link to="/" className={styles.brand}>
           <div className={styles.logoBadge}>🚗 УжНУ Cars</div>
           <span className={styles.subtitle}>Каталог автомобілів</span>
-        </div>
+        </Link>
 
         <nav className={styles.nav}>
-          <button
-            type="button"
-            onClick={() => goTo('catalog')}
-            className={`${styles.navButton} ${
-              activeView === 'catalog' ? styles.navButtonActive : ''
-            }`}
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `${styles.navButton} ${isActive ? styles.navButtonActive : ''}`
+            }
           >
             Каталог
-          </button>
+          </NavLink>
 
-          <button
-            type="button"
-            onClick={() => goTo('stats')}
-            className={`${styles.navButton} ${
-              activeView === 'stats' ? styles.navButtonActive : ''
-            }`}
+          <NavLink
+            to="/stats"
+            className={({ isActive }) =>
+              `${styles.navButton} ${isActive ? styles.navButtonActive : ''}`
+            }
           >
             Статистика
-          </button>
+          </NavLink>
 
-          {activeView === 'profile' ? (
+          {isProfilePage ? (
             <>
-              <button
-                type="button"
-                onClick={() => goTo(isAuth ? 'add-car' : 'auth-gate')}
-                className={styles.navButton}
-              >
+              <NavLink to={isAuth ? '/add-car' : '/auth-gate'} className={styles.navButton}>
                 Додати авто
-              </button>
+              </NavLink>
               <span className={styles.profileActiveTag}>Налаштування профілю</span>
               <button type="button" onClick={onLogout} className={styles.logoutButton}>
                 Вийти
@@ -61,34 +60,27 @@ export function Header({ activeView, goTo, user, onLogout }) {
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => goTo(isAuth ? 'add-car' : 'auth-gate')}
-                className={`${styles.navButton} ${
-                  activeView === 'add-car' || activeView === 'auth-gate'
-                    ? styles.navButtonActive
-                    : ''
-                }`}
+              <NavLink
+                to={isAuth ? '/add-car' : '/auth-gate'}
+                className={({ isActive }) =>
+                  `${styles.navButton} ${isActive ? styles.navButtonActive : ''}`
+                }
               >
                 Додати авто {!isAuth && <span className={styles.lockBadge}>🔒</span>}
-              </button>
+              </NavLink>
 
               {isAuth ? (
-                <div
-                  className={styles.userWidget}
-                  onClick={() => goTo('profile')}
-                  title="Налаштування профілю"
-                >
+                <Link to="/profile" className={styles.userWidget} title="Налаштування профілю">
                   <div className={styles.avatar}>{user.avatar || 'НЛ'}</div>
                   <div className={styles.userInfo}>
                     <span className={styles.userName}>{user.name}</span>
                     <span className={styles.userEmail}>{user.email}</span>
                   </div>
-                </div>
+                </Link>
               ) : (
-                <button type="button" onClick={() => goTo('login')} className={styles.loginButton}>
+                <Link to="/login" className={styles.loginButton}>
                   Увійти
-                </button>
+                </Link>
               )}
             </>
           )}
