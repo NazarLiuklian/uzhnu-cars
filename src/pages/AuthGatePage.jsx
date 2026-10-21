@@ -1,6 +1,7 @@
+import { Link } from 'react-router-dom'
 import styles from './AuthGatePage.module.css'
 
-export function AuthGatePage({ goTo }) {
+export function AuthGatePage() {
   return (
     <main className={styles.main}>
       <div className={styles.card}>
@@ -23,12 +24,12 @@ export function AuthGatePage({ goTo }) {
         </div>
 
         <div className={styles.buttonGroup}>
-          <button type="button" onClick={() => goTo('login')} className={styles.primaryButton}>
+          <Link to="/login" className={styles.primaryButton}>
             <span>Перейти до авторизації →</span>
-          </button>
-          <button type="button" onClick={() => goTo('catalog')} className={styles.secondaryButton}>
+          </Link>
+          <Link to="/" className={styles.secondaryButton}>
             Повернутися до каталогу
-          </button>
+          </Link>
         </div>
       </div>
     </main>
