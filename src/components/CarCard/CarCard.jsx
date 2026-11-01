@@ -1,14 +1,27 @@
 import styles from './CarCard.module.css'
 
-export function CarCard({ car, showFavorite, onToggleFavorite }) {
+export function CarCard({ car, showFavorite, onToggleFavorite, onClick }) {
   const isFav = car.favorite
 
   return (
-    <article className={styles.card}>
+    <article
+      className={styles.card}
+      onClick={() => onClick?.(car)}
+      tabIndex={0}
+      role="button"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onClick?.(car)
+        }
+      }}
+    >
       {showFavorite && (
         <button
           type="button"
-          onClick={() => onToggleFavorite && onToggleFavorite(car.id)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleFavorite && onToggleFavorite(car.id)
+          }}
           className={`${styles.favoriteButton} ${isFav ? styles.favoriteActive : ''}`}
           aria-label="Додати в обране"
           title={isFav ? 'В обраному' : 'Додати в обране'}
@@ -26,6 +39,11 @@ export function CarCard({ car, showFavorite, onToggleFavorite }) {
           {car.brand} {car.model}
         </h3>
         <p className={styles.owner}>Власник: {car.owner}</p>
+        <div className={styles.tagsRow}>
+          <span className={styles.tag}>{car.faculty}</span>
+          <span className={styles.tag}>{car.fuel}</span>
+          <span className={styles.tag}>{car.year} р.</span>
+        </div>
       </div>
     </article>
   )

@@ -34,6 +34,19 @@
   margin: 0;
 }
 
+.successBanner {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .avatarSection {
   display: flex;
   align-items: center;
@@ -97,6 +110,8 @@
   color: #e11d48;
   cursor: pointer;
   padding: 0;
+  border: none;
+  background: none;
 }
 
 .deletePhotoBtn:hover {
@@ -159,6 +174,18 @@
   box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
 }
 
+.inputError {
+  border-color: #f43f5e !important;
+  background-color: #fffafb;
+}
+
+.fieldError {
+  font-size: 0.75rem;
+  color: #e11d48;
+  font-weight: 500;
+  margin-top: 0.2rem;
+}
+
 .emailInputRow {
   display: flex;
   gap: 0.5rem;
@@ -201,6 +228,8 @@
   color: #475569;
   border-radius: 0.75rem;
   cursor: pointer;
+  border: none;
+  background: transparent;
   transition: background-color 0.15s ease-in-out;
 }
 
@@ -217,11 +246,17 @@
   border-radius: 0.75rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
+  border: none;
+  transition: all 0.15s ease-in-out;
 }
 
-.saveBtn:hover {
+.saveBtn:hover:not(:disabled) {
   background-color: #0369a1;
+}
+
+.saveBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 @media (min-width: 640px) {

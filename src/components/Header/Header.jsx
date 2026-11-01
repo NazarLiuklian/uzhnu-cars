@@ -1,9 +1,14 @@
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import styles from './Header.module.css'
 
-export function Header({ user, onLogout }) {
+export function Header({ user: propUser, onLogout }) {
   const location = useLocation()
+  const { user: authUser, logout } = useAuth()
+  const user = propUser !== undefined ? propUser : authUser
   const isAuth = Boolean(user)
+
+  const handleLogout = onLogout || logout
   const isLoginPage = location.pathname === '/login'
   const isProfilePage = location.pathname === '/profile'
 
@@ -54,7 +59,7 @@ export function Header({ user, onLogout }) {
                 Додати авто
               </NavLink>
               <span className={styles.profileActiveTag}>Налаштування профілю</span>
-              <button type="button" onClick={onLogout} className={styles.logoutButton}>
+              <button type="button" onClick={handleLogout} className={styles.logoutButton}>
                 Вийти
               </button>
             </>

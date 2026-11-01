@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "brand": "BMW",
+    "model": "3 Series",
+    "year": 2019,
+    "faculty": "Кафедра ІПЗ",
+    "owner": "Бучук Р. Ю.",
+    "fuel": "Бензин",
+    "transmission": "Автоматична (АКПП)",
+    "engineVolume": "2.0 л (190 к.с.)",
+    "imageText": "[ Фото Авто BMW ]",
+    "favorite": false,
+    "notes": "Часто паркується біля центрального корпусу на БАМі. Відмінний стан."
+  },
+  {
+    "id": 2,
+    "brand": "Audi",
+    "model": "A6",
+    "year": 2018,
+    "faculty": "Кафедра ІСТ",
+    "owner": "Білак Ю. Ю.",
+    "fuel": "Дизель",
+    "transmission": "Автоматична (АКПП)",
+    "engineVolume": "3.0 л TDI (286 к.с.)",
+    "imageText": "[ Фото Авто Audi ]",
+    "favorite": true,
+    "notes": "Повний привід quattro, шкіряний салон, помічений біля ректорату."
+  },
+  {
+    "id": 3,
+    "brand": "Volkswagen",
+    "model": "Passat B8",
+    "year": 2017,
+    "faculty": "Кафедра ІПЗ",
+    "owner": "Сегін І. М.",
+    "fuel": "Дизель",
+    "transmission": "Роботизована (DSG)",
+    "engineVolume": "2.0 л TDI (150 к.с.)",
+    "imageText": "[ Фото Авто VW ]",
+    "favorite": false,
+    "notes": "Практичний універсал, парковка IT-факультету."
+  },
+  {
+    "id": 4,
+    "brand": "Nissan",
+    "model": "Leaf",
+    "year": 2021,
+    "faculty": "Кафедра ІПЗ",
+    "owner": "Мельник О. О.",
+    "fuel": "Електро",
+    "transmission": "Автоматична (Редуктор)",
+    "engineVolume": "Батарея 62 кВт·год (217 к.с.)",
+    "imageText": "[ Фото Авто Nissan Leaf ]",
+    "favorite": false,
+    "notes": "Екологічний електрокар, заряджається біля головного входу."
+  }
+]
