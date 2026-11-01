@@ -1,11 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SubmissionItem } from '../components/SubmissionItem/SubmissionItem'
-import { initialSubmissions } from '../services/mockData'
+import { Modal } from '../components/ui/Modal'
+import { useAuth } from '../hooks/useAuth'
+import { api } from '../services/api'
 import styles from './AddCarPage.module.css'
 
-export function AddCarPage({ user }) {
-  const [submissions, setSubmissions] = useState(initialSubmissions)
+export function AddCarPage({ user: propUser }) {
+  const { user: authUser } = useAuth()
+  const activeUser = authUser || propUser
+
+  const [submissions, setSubmissions] = useState([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedMessage, setSubmittedMessage] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [lastSubmittedTitle, setLastSubmittedTitle] = useState('')
 
   // Form states
   const [ownerName, setOwnerName] = useState('')
@@ -18,21 +26,112 @@ export function AddCarPage({ user }) {
   const [bodyColor, setBodyColor] = useState('Чорний, Сірий...')
   const [notes, setNotes] = useState('')
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const newSubmission = {
-      id: Date.now(),
-      title: `${carModel || 'Нове авто'} (${year || 2020})`,
-      subtitle: `Викладач: ${ownerName || 'Викладач УжНУ'} • ${faculty || 'Підрозділ УжНУ'} • Надіслано щойно`,
-      status: 'pending',
-      statusLabel: 'На модерації ⏳',
+  // Form errors
+  const [formErrors, setFormErrors] = useState({})
+
+  useEffect(() => {
+    let isMounted = true
+    api.getSubmissions().then((data) => {
+      if (isMounted) setSubmissions(data)
+    })
+    return () => {
+      isMounted = false
     }
-    setSubmissions([newSubmission, ...submissions])
-    setSubmittedMessage(true)
-    setTimeout(() => setSubmittedMessage(false), 4000)
+  }, [])
+
+  const validate = () => {
+    const errors = {}
+
+    if (!ownerName.trim()) {
+      errors.ownerName = 'Будь ласка, введіть ПІБ викладача'
+    } else if (ownerName.trim().length < 3) {
+      errors.ownerName = 'ПІБ має містити щонайменше 3 символи'
+    }
+
+    if (!faculty) {
+      errors.faculty = 'Оберіть кафедру або підрозділ зі списку'
+    }
+
+    if (!carModel.trim()) {
+      errors.carModel = 'Вкажіть марку та модель автомобіля'
+    }
+
+    const yearNum = Number(year)
+    if (!year || isNaN(yearNum) || yearNum < 1990 || yearNum > 2026) {
+      errors.year = 'Рік випуску повинен бути в діапазоні 1990–2026'
+    }
+
+    if (!fuelType) {
+      errors.fuelType = 'Оберіть тип двигуна'
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
-  const userEmail = user?.email || 'student@uzhnu.edu.ua'
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!validate()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    const title = `${carModel.trim()} (${year})`
+    const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Надіслано щойно`
+
+    try {
+      const newSubmission = await api.addSubmission({ title, subtitle })
+      setSubmissions((prev) => [newSubmission, ...prev])
+
+      // Also create car in the local catalog
+      const fuelLabels = {
+        diesel: 'Дизель',
+        petrol: 'Бензин',
+        electro: 'Електро',
+        hybrid: 'Гібрид',
+        lpg: 'Газ / Бензин',
+      }
+      const transmissionLabels = {
+        auto: 'Автоматична (АКПП)',
+        manual: 'Механічна (МКПП)',
+        robot: 'Роботизована',
+      }
+
+      await api.addCar({
+        brand: carModel.split(' ')[0] || carModel,
+        model: carModel.split(' ').slice(1).join(' ') || '',
+        year,
+        faculty,
+        owner: ownerName,
+        fuel: fuelLabels[fuelType] || fuelType,
+        transmission: transmissionLabels[transmission] || transmission,
+        engineVolume,
+        notes,
+      })
+
+      setLastSubmittedTitle(title)
+      setSubmittedMessage(true)
+      setShowSuccessModal(true)
+
+      // Reset form fields
+      setOwnerName('')
+      setFaculty('')
+      setCarModel('')
+      setYear('2018')
+      setNotes('')
+      setFormErrors({})
+
+      setTimeout(() => setSubmittedMessage(false), 5000)
+    } catch (err) {
+      alert(err.message || 'Помилка при додаванні авто')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const userEmail = activeUser?.email || 'student@uzhnu.edu.ua'
 
   return (
     <main className={styles.main}>
@@ -51,12 +150,12 @@ export function AddCarPage({ user }) {
         </div>
 
         {submittedMessage && (
-          <div className={styles.successMessage}>
-            🎉 Дякуємо! Анкету успішно надіслано на модерацію.
+          <div className={styles.successMessage} role="status">
+            🎉 Дякуємо! Анкету &quot;{lastSubmittedTitle}&quot; успішно надіслано на модерацію.
           </div>
         )}
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {/* Section 1 */}
           <div className={styles.section}>
             <h3 className={styles.sectionHeading}>
@@ -64,29 +163,40 @@ export function AddCarPage({ user }) {
             </h3>
             <div className={styles.grid2}>
               <div className={styles.field}>
-                <label className={styles.label}>
+                <label className={styles.label} htmlFor="ownerName">
                   1. Прізвище, ім&apos;я та по батькові викладача
                   <span className={styles.requiredStar}>*</span>
                 </label>
                 <input
+                  id="ownerName"
                   type="text"
                   placeholder="Наприклад: Бучук Роман Юрійович"
                   value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                  className={styles.input}
+                  onChange={(e) => {
+                    setOwnerName(e.target.value)
+                    if (formErrors.ownerName) setFormErrors((p) => ({ ...p, ownerName: null }))
+                  }}
+                  className={`${styles.input} ${formErrors.ownerName ? styles.inputError : ''}`}
                   required
                 />
+                {formErrors.ownerName && (
+                  <span className={styles.fieldError}>{formErrors.ownerName}</span>
+                )}
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>
+                <label className={styles.label} htmlFor="faculty">
                   2. Кафедра / Підрозділ викладача
                   <span className={styles.requiredStar}>*</span>
                 </label>
                 <select
+                  id="faculty"
                   value={faculty}
-                  onChange={(e) => setFaculty(e.target.value)}
-                  className={styles.select}
+                  onChange={(e) => {
+                    setFaculty(e.target.value)
+                    if (formErrors.faculty) setFormErrors((p) => ({ ...p, faculty: null }))
+                  }}
+                  className={`${styles.select} ${formErrors.faculty ? styles.inputError : ''}`}
                   required
                 >
                   <option value="">Оберіть кафедру зі списку...</option>
@@ -98,6 +208,9 @@ export function AddCarPage({ user }) {
                   </option>
                   <option value="Інший підрозділ">Інший підрозділ УжНУ</option>
                 </select>
+                {formErrors.faculty && (
+                  <span className={styles.fieldError}>{formErrors.faculty}</span>
+                )}
               </div>
             </div>
           </div>
@@ -109,33 +222,45 @@ export function AddCarPage({ user }) {
             </h3>
             <div className={styles.grid2}>
               <div className={styles.field}>
-                <label className={styles.label}>
+                <label className={styles.label} htmlFor="carModel">
                   3. Марка та модель <span className={styles.requiredStar}>*</span>
                 </label>
                 <input
+                  id="carModel"
                   type="text"
                   placeholder="Наприклад: Volkswagen Passat B8"
                   value={carModel}
-                  onChange={(e) => setCarModel(e.target.value)}
-                  className={styles.input}
+                  onChange={(e) => {
+                    setCarModel(e.target.value)
+                    if (formErrors.carModel) setFormErrors((p) => ({ ...p, carModel: null }))
+                  }}
+                  className={`${styles.input} ${formErrors.carModel ? styles.inputError : ''}`}
                   required
                 />
+                {formErrors.carModel && (
+                  <span className={styles.fieldError}>{formErrors.carModel}</span>
+                )}
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>
+                <label className={styles.label} htmlFor="year">
                   4. Рік випуску <span className={styles.requiredStar}>*</span>
                 </label>
                 <input
+                  id="year"
                   type="number"
                   placeholder="2018"
                   min="1990"
                   max="2026"
                   value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  className={styles.input}
+                  onChange={(e) => {
+                    setYear(e.target.value)
+                    if (formErrors.year) setFormErrors((p) => ({ ...p, year: null }))
+                  }}
+                  className={`${styles.input} ${formErrors.year ? styles.inputError : ''}`}
                   required
                 />
+                {formErrors.year && <span className={styles.fieldError}>{formErrors.year}</span>}
               </div>
             </div>
           </div>
@@ -147,10 +272,11 @@ export function AddCarPage({ user }) {
             </h3>
             <div className={styles.grid4}>
               <div className={styles.field}>
-                <label className={styles.label}>
+                <label className={styles.label} htmlFor="fuelType">
                   5. Тип двигуна / палива <span className={styles.requiredStar}>*</span>
                 </label>
                 <select
+                  id="fuelType"
                   value={fuelType}
                   onChange={(e) => setFuelType(e.target.value)}
                   className={styles.select}
@@ -165,8 +291,11 @@ export function AddCarPage({ user }) {
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>6. Об&apos;єм / батарея</label>
+                <label className={styles.label} htmlFor="engineVolume">
+                  6. Об&apos;єм / батарея
+                </label>
                 <input
+                  id="engineVolume"
                   type="text"
                   placeholder="2.0 л або 64 кВт"
                   value={engineVolume}
@@ -176,8 +305,11 @@ export function AddCarPage({ user }) {
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>7. Коробка передач</label>
+                <label className={styles.label} htmlFor="transmission">
+                  7. Коробка передач
+                </label>
                 <select
+                  id="transmission"
                   value={transmission}
                   onChange={(e) => setTransmission(e.target.value)}
                   className={styles.select}
@@ -189,8 +321,11 @@ export function AddCarPage({ user }) {
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>8. Колір кузова</label>
+                <label className={styles.label} htmlFor="bodyColor">
+                  8. Колір кузова
+                </label>
                 <input
+                  id="bodyColor"
                   type="text"
                   placeholder="Чорний, Сірий..."
                   value={bodyColor}
@@ -221,10 +356,11 @@ export function AddCarPage({ user }) {
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>
+              <label className={styles.label} htmlFor="notes">
                 Додаткові особливості / Комплектація / Де помічено
               </label>
               <textarea
+                id="notes"
                 rows={3}
                 placeholder="Наприклад: авто часто паркується біля головного корпусу на БАМі, має панорамний дах..."
                 value={notes}
@@ -234,9 +370,11 @@ export function AddCarPage({ user }) {
             </div>
           </div>
 
-          <button type="submit" className={styles.submitBtn}>
-            <span>Відправити анкету на модерацію</span>
-            <span>🚀</span>
+          <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+            <span>
+              {isSubmitting ? 'Відправка на модерацію... ⏳' : 'Відправити анкету на модерацію'}
+            </span>
+            {!isSubmitting && <span>🚀</span>}
           </button>
         </form>
       </div>
@@ -259,6 +397,30 @@ export function AddCarPage({ user }) {
           ))}
         </div>
       </section>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Заявку успішно прийнято"
+      >
+        <div className={styles.modalSuccessContent}>
+          <div className={styles.successIconBadge}>✓</div>
+          <h4 className={styles.modalSuccessTitle}>Автомобіль надіслано на розгляд!</h4>
+          <p className={styles.modalSuccessText}>
+            Вашу пропозицію <strong>&quot;{lastSubmittedTitle}&quot;</strong> додано до списку
+            модерації. Після перевірки викладачем або адміністратором статус автоматично оновиться в
+            історії пропозицій.
+          </p>
+          <button
+            type="button"
+            className={styles.modalOkBtn}
+            onClick={() => setShowSuccessModal(false)}
+          >
+            Зрозуміло
+          </button>
+        </div>
+      </Modal>
     </main>
   )
 }
