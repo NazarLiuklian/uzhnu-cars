@@ -26,6 +26,11 @@ export function AddCarPage({ user: propUser }) {
   const [bodyColor, setBodyColor] = useState('Чорний, Сірий...')
   const [notes, setNotes] = useState('')
 
+  // 4.1. Додайте стани фото
+  const [carImage, setCarImage] = useState('')
+  const [isDraggingImage, setIsDraggingImage] = useState(false)
+  const [imageError, setImageError] = useState('')
+
   // Form errors
   const [formErrors, setFormErrors] = useState({})
 
@@ -38,6 +43,46 @@ export function AddCarPage({ user: propUser }) {
       isMounted = false
     }
   }, [])
+
+  // 4.2. Додайте обробники файлу
+  const processImageFile = (file) => {
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('Будь ласка, виберіть файл зображення')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setImageError('Розмір файлу не повинен перевищувати 10 МБ')
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCarImage(reader.result)
+        setImageError('')
+      }
+    }
+
+    reader.onerror = () => {
+      setImageError('Не вдалося прочитати файл')
+    }
+
+    reader.readAsDataURL(file)
+  }
+
+  const handleImageChange = (e) => {
+    processImageFile(e.target.files?.[0])
+  }
+
+  const handleImageDrop = (e) => {
+    e.preventDefault()
+    setIsDraggingImage(false)
+    processImageFile(e.dataTransfer.files?.[0])
+  }
 
   const validate = () => {
     const errors = {}
@@ -99,6 +144,7 @@ export function AddCarPage({ user: propUser }) {
         robot: 'Роботизована',
       }
 
+      // 4.3. Передайте фото в api.addCar
       await api.addCar({
         brand: carModel.split(' ')[0] || carModel,
         model: carModel.split(' ').slice(1).join(' ') || '',
@@ -108,6 +154,7 @@ export function AddCarPage({ user: propUser }) {
         fuel: fuelLabels[fuelType] || fuelType,
         transmission: transmissionLabels[transmission] || transmission,
         engineVolume,
+        imageUrl: carImage,
         notes,
       })
 
@@ -122,6 +169,10 @@ export function AddCarPage({ user: propUser }) {
       setYear('')
       setNotes('')
       setFormErrors({})
+
+      // 4.4. Очистіть фото після відправлення
+      setCarImage('')
+      setImageError('')
 
       setTimeout(() => setSubmittedMessage(false), 5000)
     } catch (err) {
@@ -342,17 +393,62 @@ export function AddCarPage({ user: propUser }) {
               <span>📸 4. Медіаматеріали та додаткові нотатки</span>
             </h3>
 
+            {/* 4.5. Замініть блок завантаження фото */}
             <div className={styles.field}>
               <label className={styles.label}>
                 9. Фотографія автомобіля (бажано на території УжНУ)
               </label>
-              <div className={styles.uploadZone}>
-                <div className={styles.uploadIcon}>+</div>
-                <p className={styles.uploadText}>
-                  Перетягніть фото авто сюди або оберіть файл на пристрої
-                </p>
-                <p className={styles.uploadHint}>Підтримуються формати JPG, PNG до 10 МБ</p>
+              <div
+                className={`${styles.uploadZone} ${isDraggingImage ? styles.uploadZoneActive : ''}`}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setIsDraggingImage(true)
+                }}
+                onDragLeave={() => setIsDraggingImage(false)}
+                onDrop={handleImageDrop}
+                onClick={() => document.getElementById('carImageInput')?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    document.getElementById('carImageInput')?.click()
+                  }
+                }}
+              >
+                <input
+                  id="carImageInput"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  hidden
+                />
+
+                {carImage ? (
+                  <img
+                    src={carImage}
+                    alt="Попередній перегляд автомобіля"
+                    className={styles.imagePreview}
+                  />
+                ) : (
+                  <>
+                    <div className={styles.uploadIcon}>+</div>
+                    <p className={styles.uploadText}>
+                      Перетягніть фото авто сюди або оберіть файл на пристрої
+                    </p>
+                    <p className={styles.uploadHint}>
+                      Підтримуються формати JPG, PNG, WEBP до 10 МБ
+                    </p>
+                  </>
+                )}
+
+                {carImage && (
+                  <p className={styles.uploadHint}>
+                    Натисніть або перетягніть інше фото для заміни
+                  </p>
+                )}
               </div>
+
+              {imageError && <span className={styles.fieldError}>{imageError}</span>}
             </div>
 
             <div className={styles.field}>

@@ -50,6 +50,21 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const resetPassword = useCallback(async (credentials) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const updatedUser = await api.resetPassword(credentials)
+      return updatedUser
+    } catch (err) {
+      const message = err.message || 'Не вдалося скинути пароль'
+      setError(message)
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   const logout = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -86,6 +101,7 @@ export function AuthProvider({ children }) {
     error,
     login,
     register,
+    resetPassword,
     logout,
     updateProfile,
     clearError,

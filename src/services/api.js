@@ -185,15 +185,60 @@ export const api = {
     return activeUser
   },
 
+  async resetPassword({ email, newPassword }) {
+    await delay(350)
+
+    if (!email?.trim()) {
+      throw new Error('Введіть адресу електронної пошти')
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Пароль повинен містити щонайменше 6 символів')
+    }
+
+    const registeredUser = this.getRegisteredUser()
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (!registeredUser || registeredUser.email.trim().toLowerCase() !== normalizedEmail) {
+      throw new Error('Користувача з такою електронною поштою не знайдено')
+    }
+
+    const updatedUser = {
+      ...registeredUser,
+      password: newPassword,
+    }
+
+    localStorage.setItem(REGISTERED_USER_STORAGE_KEY, JSON.stringify(updatedUser))
+
+    const activeUser = this.getCurrentUser()
+
+    if (activeUser?.email?.trim().toLowerCase() === normalizedEmail) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser))
+    }
+
+    return updatedUser
+  },
+
   async register({ name, email, password }) {
     await delay(350)
 
     if (!name || name.trim().length < 2) {
       throw new Error('Введіть ваше імʼя та прізвище')
     }
+
     if (!email) {
       throw new Error('Введіть адресу електронної пошти')
     }
+
+    const normalizedEmail = email.trim().toLowerCase()
+    const registeredUser = this.getRegisteredUser()
+
+    if (registeredUser?.email?.trim().toLowerCase() === normalizedEmail) {
+      throw new Error(
+        'Користувач із такою електронною поштою вже зареєстрований. Будь ласка, увійдіть',
+      )
+    }
+
     if (!password || password.length < 6) {
       throw new Error('Пароль повинен містити щонайменше 6 символів')
     }
@@ -206,7 +251,7 @@ export const api = {
 
     const user = {
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       avatar,
       role: 'student',

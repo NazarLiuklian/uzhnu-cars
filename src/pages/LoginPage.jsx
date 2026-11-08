@@ -6,7 +6,7 @@ import styles from './LoginPage.module.css'
 export function LoginPage({ onLogin }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, register, isLoading, error: authError, clearError } = useAuth()
+  const { login, register, resetPassword, isLoading, error: authError, clearError } = useAuth()
 
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [name, setName] = useState('')
@@ -15,9 +15,46 @@ export function LoginPage({ onLogin }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [formErrors, setFormErrors] = useState({})
 
+  const [isResetMode, setIsResetMode] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetNewPassword, setResetNewPassword] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
+  const [resetError, setResetError] = useState('')
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setResetMessage('')
+    setResetError('')
+
+    if (!resetEmail.trim()) {
+      setResetError('Введіть адресу електронної пошти')
+      return
+    }
+
+    if (!resetNewPassword || resetNewPassword.length < 6) {
+      setResetError('Пароль повинен містити щонайменше 6 символів')
+      return
+    }
+
+    try {
+      await resetPassword({
+        email: resetEmail,
+        newPassword: resetNewPassword,
+      })
+      setResetMessage('Пароль успішно змінено!')
+      setResetEmail('')
+      setResetNewPassword('')
+    } catch (error) {
+      setResetError(error.message || 'Не вдалося змінити пароль')
+    }
+  }
+
   const handleToggleMode = () => {
     setIsRegisterMode((prev) => !prev)
+    setIsResetMode(false)
     setFormErrors({})
+    setResetMessage('')
+    setResetError('')
     clearError()
   }
 
@@ -74,11 +111,10 @@ export function LoginPage({ onLogin }) {
 
       onLogin?.(user)
 
-      // Redirect according to intent
       const destination = location.state?.from || '/profile'
       navigate(destination, { replace: true })
     } catch {
-      // Error handled and set by AuthContext
+      // Error handled by AuthContext
     }
   }
 
@@ -119,132 +155,234 @@ export function LoginPage({ onLogin }) {
       <div className={styles.card}>
         <div className={styles.headerText}>
           <h1 className={styles.title}>
-            {isRegisterMode ? 'Створення акаунту' : 'Вхід в систему'}
+            {isResetMode
+              ? 'Відновлення пароля'
+              : isRegisterMode
+                ? 'Створення акаунту'
+                : 'Вхід в систему'}
           </h1>
           <p className={styles.subtitle}>
-            {isRegisterMode
-              ? 'Зареєструйтесь для доступу до додавання автомобілів'
-              : 'Авторизуйтесь для доступу до додавання авто'}
+            {isResetMode
+              ? 'Введіть ваші дані для зміни пароля'
+              : isRegisterMode
+                ? 'Зареєструйтесь для доступу до додавання автомобілів'
+                : 'Авторизуйтесь для доступу до додавання авто'}
           </p>
         </div>
 
-        <form className={styles.form} onSubmit={handleSubmit} noValidate>
-          {isRegisterMode && (
+        {isResetMode && (
+          <div className={styles.resetBox}>
             <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="name">
-                Ім&apos;я та прізвище
+              <label className={styles.label} htmlFor="resetEmail">
+                Електронна пошта
               </label>
               <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={handleNameChange}
-                className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`}
-                placeholder="ВВеедіть ваще ім'я та прізвище"
-                required
+                id="resetEmail"
+                type="email"
+                value={resetEmail}
+                onChange={(e) => {
+                  setResetEmail(e.target.value)
+                  setResetError('')
+                }}
+                className={styles.input}
+                placeholder="example@email.com"
+                autoComplete="off"
               />
-              {formErrors.name && <span className={styles.fieldError}>{formErrors.name}</span>}
             </div>
-          )}
 
-          <div className={styles.fieldGroup}>
-            <label className={styles.label} htmlFor="email">
-              Електронна пошта
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`}
-              placeholder="example@email.com"
-              required
-            />
-            {formErrors.email && <span className={styles.fieldError}>{formErrors.email}</span>}
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <div className={styles.passwordLabelRow}>
-              <label className={styles.label} htmlFor="password">
-                Пароль
-              </label>
-              {!isRegisterMode && <span className={styles.forgotLink}>Забули?</span>}
-            </div>
-            <input
-              id="password"
-              type="text"
-              autoComplete="off"
-              data-lpignore="true"
-              value={password}
-              onChange={handlePasswordChange}
-              className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`}
-              placeholder={
-                isRegisterMode ? 'Придумайте пароль (від 6 символів)' : 'Введіть ваш пароль'
-              }
-              required
-            />
-            {formErrors.password && (
-              <span className={styles.fieldError}>{formErrors.password}</span>
-            )}
-          </div>
-
-          {isRegisterMode && (
             <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="confirmPassword">
-                Повторіть ваш пароль
+              <label className={styles.label} htmlFor="resetNewPassword">
+                Новий пароль
               </label>
               <input
-                id="confirmPassword"
+                id="resetNewPassword"
                 type="text"
+                value={resetNewPassword}
+                onChange={(e) => {
+                  setResetNewPassword(e.target.value)
+                  setResetError('')
+                }}
+                className={styles.input}
+                placeholder="Введіть новий пароль"
                 autoComplete="off"
                 data-lpignore="true"
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-                className={`${styles.input} ${formErrors.confirmPassword ? styles.inputError : ''}`}
-                placeholder="Повторіть ваш пароль"
+              />
+            </div>
+
+            {resetError && (
+              <div className={styles.errorBanner} role="alert">
+                <span>⚠️</span>
+                <span>{resetError}</span>
+              </div>
+            )}
+
+            {resetMessage && (
+              <div className={styles.successBanner} role="status">
+                <span>✓</span>
+                <span>{resetMessage}</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className={styles.submitButton}
+              onClick={handleResetPassword}
+              disabled={isLoading}
+            >
+              Змінити пароль
+            </button>
+
+            <button
+              type="button"
+              className={styles.registerLink}
+              style={{ marginTop: '12px', display: 'block', width: '100%' }}
+              onClick={() => {
+                setIsResetMode(false)
+                setResetEmail('')
+                setResetNewPassword('')
+                setResetMessage('')
+                setResetError('')
+              }}
+            >
+              Повернутися до входу
+            </button>
+          </div>
+        )}
+
+        {!isResetMode && (
+          <form className={styles.form} onSubmit={handleSubmit} noValidate>
+            {isRegisterMode && (
+              <div className={styles.fieldGroup}>
+                <label className={styles.label} htmlFor="name">
+                  Ім&apos;я та прізвище
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={handleNameChange}
+                  className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`}
+                  placeholder="Введіть ваше ім'я та прізвище"
+                  required
+                />
+                {formErrors.name && <span className={styles.fieldError}>{formErrors.name}</span>}
+              </div>
+            )}
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.label} htmlFor="email">
+                Електронна пошта
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`}
+                placeholder="example@email.com"
                 required
               />
-              {formErrors.confirmPassword && (
-                <span className={styles.fieldError}>{formErrors.confirmPassword}</span>
+              {formErrors.email && <span className={styles.fieldError}>{formErrors.email}</span>}
+            </div>
+
+            <div className={styles.fieldGroup}>
+              <div className={styles.passwordLabelRow}>
+                <label className={styles.label} htmlFor="password">
+                  Пароль
+                </label>
+                {!isRegisterMode && (
+                  <button
+                    type="button"
+                    className={styles.forgotLink}
+                    onClick={() => {
+                      setIsResetMode(true)
+                      setResetMessage('')
+                      setResetError('')
+                      clearError()
+                    }}
+                  >
+                    Забули?
+                  </button>
+                )}
+              </div>
+              <input
+                id="password"
+                type="password"
+                autoComplete="off"
+                data-lpignore="true"
+                value={password}
+                onChange={handlePasswordChange}
+                className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`}
+                placeholder={
+                  isRegisterMode ? 'Придумайте пароль (від 6 символів)' : 'Введіть ваш пароль'
+                }
+                required
+              />
+              {formErrors.password && (
+                <span className={styles.fieldError}>{formErrors.password}</span>
               )}
             </div>
-          )}
 
-          <button type="submit" className={styles.submitButton} disabled={isLoading}>
-            {isLoading
-              ? isRegisterMode
-                ? 'Створення акаунту... ⏳'
-                : 'Авторизація... ⏳'
-              : isRegisterMode
-                ? 'Зареєструватися та продовжити →'
-                : 'Увійти та продовжити →'}
-          </button>
+            {isRegisterMode && (
+              <div className={styles.fieldGroup}>
+                <label className={styles.label} htmlFor="confirmPassword">
+                  Повторіть ваш пароль
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  value={confirmPassword}
+                  onChange={handleConfirmPasswordChange}
+                  className={`${styles.input} ${formErrors.confirmPassword ? styles.inputError : ''}`}
+                  placeholder="Повторіть ваш пароль"
+                  required
+                />
+                {formErrors.confirmPassword && (
+                  <span className={styles.fieldError}>{formErrors.confirmPassword}</span>
+                )}
+              </div>
+            )}
 
-          {authError && (
-            <div className={styles.errorBanner} role="alert">
-              <span>⚠️</span>
-              <span>{authError}</span>
-            </div>
-          )}
-        </form>
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading
+                ? isRegisterMode
+                  ? 'Створення акаунту... ⏳'
+                  : 'Авторизація... ⏳'
+                : isRegisterMode
+                  ? 'Зареєструватися та продовжити →'
+                  : 'Увійти та продовжити →'}
+            </button>
 
-        <div className={styles.footer}>
-          {isRegisterMode ? (
-            <>
-              Вже маєте акаунт?{' '}
-              <button type="button" className={styles.registerLink} onClick={handleToggleMode}>
-                Увійти
-              </button>
-            </>
-          ) : (
-            <>
-              Ще не зареєстровані?{' '}
-              <button type="button" className={styles.registerLink} onClick={handleToggleMode}>
-                Створити акаунт
-              </button>
-            </>
-          )}
-        </div>
+            {authError && (
+              <div className={styles.errorBanner} role="alert">
+                <span>⚠️</span>
+                <span>{authError}</span>
+              </div>
+            )}
+          </form>
+        )}
+
+        {!isResetMode && (
+          <div className={styles.footer}>
+            {isRegisterMode ? (
+              <>
+                Вже маєте акаунт?{' '}
+                <button type="button" className={styles.registerLink} onClick={handleToggleMode}>
+                  Увійти
+                </button>
+              </>
+            ) : (
+              <>
+                Ще не зареєстровані?{' '}
+                <button type="button" className={styles.registerLink} onClick={handleToggleMode}>
+                  Створити акаунт
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </main>
   )
