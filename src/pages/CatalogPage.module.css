@@ -186,7 +186,7 @@
 }
 
 .modalImage {
-  height: 12rem;
+  height: 14rem;
   background-color: #f1f5f9;
   border-radius: 0.75rem;
   display: flex;
@@ -196,6 +196,14 @@
   font-size: 1rem;
   font-weight: 600;
   user-select: none;
+  overflow: hidden;
+}
+
+.modalImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .detailsGrid {

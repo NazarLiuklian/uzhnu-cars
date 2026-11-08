@@ -13,6 +13,8 @@ export function useCars() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDept, setSelectedDept] = useState('')
   const [selectedFuel, setSelectedFuel] = useState('')
+  const [minYear, setMinYear] = useState('')
+  const [maxYear, setMaxYear] = useState('')
   const [onlyFavorites, setOnlyFavorites] = useState(false)
 
   // Active car for details modal
@@ -53,7 +55,7 @@ export function useCars() {
 
     try {
       await api.toggleFavorite(carId, currentFav)
-    } catch (err) {
+    } catch {
       // Revert if API fails
       setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, favorite: currentFav } : c)))
     }
@@ -69,6 +71,8 @@ export function useCars() {
     setSearchTerm('')
     setSelectedDept('')
     setSelectedFuel('')
+    setMinYear('')
+    setMaxYear('')
     setOnlyFavorites(false)
   }, [])
 
@@ -93,13 +97,21 @@ export function useCars() {
         return false
       }
 
+      if (minYear && Number(car.year) < Number(minYear)) {
+        return false
+      }
+
+      if (maxYear && Number(car.year) > Number(maxYear)) {
+        return false
+      }
+
       if (onlyFavorites && !car.favorite) {
         return false
       }
 
       return true
     })
-  }, [cars, searchTerm, selectedDept, selectedFuel, onlyFavorites])
+  }, [cars, searchTerm, selectedDept, selectedFuel, minYear, maxYear, onlyFavorites])
 
   return {
     cars,
@@ -112,6 +124,10 @@ export function useCars() {
     setSelectedDept,
     selectedFuel,
     setSelectedFuel,
+    minYear,
+    setMinYear,
+    maxYear,
+    setMaxYear,
     onlyFavorites,
     setOnlyFavorites,
     selectedCar,

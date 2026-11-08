@@ -19,7 +19,7 @@ export function AddCarPage({ user: propUser }) {
   const [ownerName, setOwnerName] = useState('')
   const [faculty, setFaculty] = useState('')
   const [carModel, setCarModel] = useState('')
-  const [year, setYear] = useState('2018')
+  const [year, setYear] = useState('')
   const [fuelType, setFuelType] = useState('diesel')
   const [engineVolume, setEngineVolume] = useState('2.0 л або 64 кВт')
   const [transmission, setTransmission] = useState('auto')
@@ -119,7 +119,7 @@ export function AddCarPage({ user: propUser }) {
       setOwnerName('')
       setFaculty('')
       setCarModel('')
-      setYear('2018')
+      setYear('')
       setNotes('')
       setFormErrors({})
 
@@ -249,7 +249,7 @@ export function AddCarPage({ user: propUser }) {
                 <input
                   id="year"
                   type="number"
-                  placeholder="2018"
+                  placeholder="Наприклад: 2019"
                   min="1990"
                   max="2026"
                   value={year}

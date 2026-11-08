@@ -17,6 +17,10 @@ export function CatalogPage() {
     setSelectedDept,
     selectedFuel,
     setSelectedFuel,
+    minYear,
+    setMinYear,
+    maxYear,
+    setMaxYear,
     onlyFavorites,
     setOnlyFavorites,
     selectedCar,
@@ -45,6 +49,10 @@ export function CatalogPage() {
           onSelectDepartment={setSelectedDept}
           selectedFuel={selectedFuel}
           onSelectFuel={setSelectedFuel}
+          minYear={minYear}
+          onMinYearChange={setMinYear}
+          maxYear={maxYear}
+          onMaxYearChange={setMaxYear}
           onlyFavorites={onlyFavorites}
           onToggleFavorites={setOnlyFavorites}
           onReset={resetFilters}
@@ -92,7 +100,12 @@ export function CatalogPage() {
           {!isLoading && !error && filteredCars.length === 0 && (
             <div className={styles.emptyState}>
               <p>Автомобілів за заданими параметрами не знайдено</p>
-              {(searchTerm || selectedDept || selectedFuel || onlyFavorites) && (
+              {(searchTerm ||
+                selectedDept ||
+                selectedFuel ||
+                minYear ||
+                maxYear ||
+                onlyFavorites) && (
                 <button type="button" onClick={resetFilters} className={styles.resetBtn}>
                   Скинути всі фільтри
                 </button>
@@ -111,7 +124,15 @@ export function CatalogPage() {
         {selectedCar && (
           <div className={styles.modalDetails}>
             <div className={styles.modalImage}>
-              <span>{selectedCar.imageText || `[ Фото ${selectedCar.brand} ]`}</span>
+              {selectedCar.imageUrl ? (
+                <img
+                  src={selectedCar.imageUrl}
+                  alt={`${selectedCar.brand} ${selectedCar.model}`}
+                  className={styles.modalImg}
+                />
+              ) : (
+                <span>{selectedCar.imageText || `[ Фото ${selectedCar.brand} ]`}</span>
+              )}
             </div>
 
             <div className={styles.detailsGrid}>
@@ -145,7 +166,7 @@ export function CatalogPage() {
                 <span className={styles.detailLabel}>Нотатки та деталі</span>
                 <div className={styles.notesBox}>
                   {selectedCar.notes ||
-                    'Автомобіль викладача УжНУ. Додаткова інформація перевірена модератором.'}
+                    'Автомобіль викладача Ужгородського університету. Додаткова інформація перевірена модератором.'}
                 </div>
               </div>
             </div>

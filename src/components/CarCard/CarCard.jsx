@@ -31,7 +31,16 @@ export function CarCard({ car, showFavorite, onToggleFavorite, onClick }) {
       )}
 
       <div className={styles.imagePlaceholder}>
-        <span>{car.imageText || `[ Фото Авто ${car.brand} ]`}</span>
+        {car.imageUrl ? (
+          <img
+            src={car.imageUrl}
+            alt={`${car.brand} ${car.model}`}
+            className={styles.carImg}
+            loading="lazy"
+          />
+        ) : (
+          <span>{car.imageText || `[ Фото Авто ${car.brand} ]`}</span>
+        )}
       </div>
 
       <div className={styles.info}>

@@ -80,7 +80,7 @@ export function StatsPage() {
         </div>
         <div className={styles.metricCard}>
           <span className={styles.metricNumber}>{counters.averageYear}</span>
-          <span className={styles.metricLabel}>Середній вік</span>
+          <span className={styles.metricLabel}>Середній рік випуску</span>
         </div>
       </div>
     </main>

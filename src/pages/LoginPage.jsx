@@ -1,16 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import styles from './LoginPage.module.css'
 
 export function LoginPage({ onLogin }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login, register, isLoading, error: authError, clearError } = useAuth()
 
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('nazar.liuklian@uzhnu.edu.ua')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [formErrors, setFormErrors] = useState({})
 
@@ -32,9 +33,9 @@ export function LoginPage({ onLogin }) {
     }
 
     if (!email.trim()) {
-      errors.email = 'Будь ласка, введіть університетську пошту'
+      errors.email = 'Будь ласка, введіть електронну пошту'
     } else if (!email.includes('@') || !email.includes('.')) {
-      errors.email = 'Введіть коректну адресу пошти (наприклад: name@uzhnu.edu.ua)'
+      errors.email = 'Введіть коректну адресу пошти (наприклад: example@email.com)'
     }
 
     if (!password) {
@@ -72,9 +73,12 @@ export function LoginPage({ onLogin }) {
       }
 
       onLogin?.(user)
-      navigate('/add-car')
+
+      // Redirect according to intent
+      const destination = location.state?.from || '/profile'
+      navigate(destination, { replace: true })
     } catch {
-      // Error handled by AuthContext
+      // Error handled and set by AuthContext
     }
   }
 
@@ -83,6 +87,7 @@ export function LoginPage({ onLogin }) {
     if (formErrors.name) {
       setFormErrors((prev) => ({ ...prev, name: null }))
     }
+    clearError()
   }
 
   const handleEmailChange = (e) => {
@@ -90,6 +95,7 @@ export function LoginPage({ onLogin }) {
     if (formErrors.email) {
       setFormErrors((prev) => ({ ...prev, email: null }))
     }
+    clearError()
   }
 
   const handlePasswordChange = (e) => {
@@ -97,6 +103,7 @@ export function LoginPage({ onLogin }) {
     if (formErrors.password) {
       setFormErrors((prev) => ({ ...prev, password: null }))
     }
+    clearError()
   }
 
   const handleConfirmPasswordChange = (e) => {
@@ -104,6 +111,7 @@ export function LoginPage({ onLogin }) {
     if (formErrors.confirmPassword) {
       setFormErrors((prev) => ({ ...prev, confirmPassword: null }))
     }
+    clearError()
   }
 
   return (
@@ -120,13 +128,6 @@ export function LoginPage({ onLogin }) {
           </p>
         </div>
 
-        {authError && (
-          <div className={styles.errorBanner} role="alert">
-            <span>⚠️</span>
-            <span>{authError}</span>
-          </div>
-        )}
-
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {isRegisterMode && (
             <div className={styles.fieldGroup}>
@@ -139,7 +140,7 @@ export function LoginPage({ onLogin }) {
                 value={name}
                 onChange={handleNameChange}
                 className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`}
-                placeholder="Наприклад: Назар Люклян"
+                placeholder="ВВеедіть ваще ім'я та прізвище"
                 required
               />
               {formErrors.name && <span className={styles.fieldError}>{formErrors.name}</span>}
@@ -148,7 +149,7 @@ export function LoginPage({ onLogin }) {
 
           <div className={styles.fieldGroup}>
             <label className={styles.label} htmlFor="email">
-              Університетська пошта
+              Електронна пошта
             </label>
             <input
               id="email"
@@ -156,7 +157,7 @@ export function LoginPage({ onLogin }) {
               value={email}
               onChange={handleEmailChange}
               className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`}
-              placeholder="prizvyshche@uzhnu.edu.ua"
+              placeholder="example@email.com"
               required
             />
             {formErrors.email && <span className={styles.fieldError}>{formErrors.email}</span>}
@@ -171,7 +172,9 @@ export function LoginPage({ onLogin }) {
             </div>
             <input
               id="password"
-              type="password"
+              type="text"
+              autoComplete="off"
+              data-lpignore="true"
               value={password}
               onChange={handlePasswordChange}
               className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`}
@@ -188,11 +191,13 @@ export function LoginPage({ onLogin }) {
           {isRegisterMode && (
             <div className={styles.fieldGroup}>
               <label className={styles.label} htmlFor="confirmPassword">
-                Повторіть пароль
+                Повторіть ваш пароль
               </label>
               <input
                 id="confirmPassword"
-                type="password"
+                type="text"
+                autoComplete="off"
+                data-lpignore="true"
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 className={`${styles.input} ${formErrors.confirmPassword ? styles.inputError : ''}`}
@@ -214,6 +219,13 @@ export function LoginPage({ onLogin }) {
                 ? 'Зареєструватися та продовжити →'
                 : 'Увійти та продовжити →'}
           </button>
+
+          {authError && (
+            <div className={styles.errorBanner} role="alert">
+              <span>⚠️</span>
+              <span>{authError}</span>
+            </div>
+          )}
         </form>
 
         <div className={styles.footer}>

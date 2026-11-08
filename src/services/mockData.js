@@ -7,6 +7,8 @@ export const initialCars = [
     faculty: 'Кафедра ІПЗ',
     owner: 'Бучук Р. Ю.',
     fuel: 'Бензин',
+    imageUrl:
+      'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/2019_BMW_318d_SE_Automatic_2.0_Front.jpg/1280px-2019_BMW_318d_SE_Automatic_2.0_Front.jpg',
     imageText: '[ Фото Авто BMW ]',
     favorite: false,
   },
@@ -18,6 +20,8 @@ export const initialCars = [
     faculty: 'Кафедра ІСТ',
     owner: 'Білак Ю. Ю.',
     fuel: 'Дизель',
+    imageUrl:
+      'https://media.ed.edmunds-media.com/audi/a6/2018/oem/2018_audi_a6_sedan_30-tfsi-prestige-quattro_fq_oem_2_1600.jpg',
     imageText: '[ Фото Авто Audi ]',
     favorite: true,
   },
@@ -29,6 +33,8 @@ export const initialCars = [
     faculty: 'Кафедра ІПЗ',
     owner: 'Сегін І. М.',
     fuel: 'Дизель',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/91/VW_Passat_B8_Limousine_2.0_TDI_Highline.JPG',
     imageText: '[ Фото Авто VW ]',
     favorite: false,
   },
@@ -40,6 +46,8 @@ export const initialCars = [
     faculty: 'Кафедра ІПЗ',
     owner: 'Мельник О. О.',
     fuel: 'Електро',
+    imageUrl:
+      'https://wieck-nissanao-production.s3.us-west-1.amazonaws.com/releaseInlineImages/67c8675762e75f9327220cb00aba8abd59fc9db3',
     imageText: '[ Фото Авто Nissan Leaf ]',
     favorite: false,
   },
@@ -47,19 +55,19 @@ export const initialCars = [
 
 export const statsData = {
   engineRatio: {
-    electro: 30,
-    ice: 70,
+    electro: 25,
+    ice: 75,
   },
   topBrands: [
-    { brand: 'VW', count: 8, height: 110, color: '#0ea5e9' },
-    { brand: 'Audi', count: 6, height: 80, color: '#38bdf8' },
-    { brand: 'BMW', count: 4, height: 55, color: '#7dd3fc' },
-    { brand: 'Skoda', count: 2, height: 25, color: '#bae6fd' },
+    { brand: 'BMW', count: 1, height: 110, color: '#0ea5e9' },
+    { brand: 'Audi', count: 1, height: 110, color: '#38bdf8' },
+    { brand: 'Volkswagen', count: 1, height: 110, color: '#7dd3fc' },
+    { brand: 'Nissan', count: 1, height: 110, color: '#bae6fd' },
   ],
   counters: {
-    totalCars: 21,
-    uniqueBrands: 15,
-    averageYear: 2016,
+    totalCars: 4,
+    uniqueBrands: 4,
+    averageYear: 2019,
   },
 }
 
