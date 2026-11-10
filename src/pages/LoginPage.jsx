@@ -52,6 +52,10 @@ export function LoginPage({ onLogin }) {
   const handleToggleMode = () => {
     setIsRegisterMode((prev) => !prev)
     setIsResetMode(false)
+    setName('')
+    setEmail('')
+    setPassword('')
+    setConfirmPassword('')
     setFormErrors({})
     setResetMessage('')
     setResetError('')
@@ -280,6 +284,7 @@ export function LoginPage({ onLogin }) {
                 onChange={handleEmailChange}
                 className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`}
                 placeholder="example@email.com"
+                autoComplete="off"
                 required
               />
               {formErrors.email && <span className={styles.fieldError}>{formErrors.email}</span>}
@@ -307,7 +312,7 @@ export function LoginPage({ onLogin }) {
               </div>
               <input
                 id="password"
-                type="password"
+                type="text"
                 autoComplete="off"
                 data-lpignore="true"
                 value={password}
@@ -330,8 +335,8 @@ export function LoginPage({ onLogin }) {
                 </label>
                 <input
                   id="confirmPassword"
-                  type="password"
-                  autoComplete="off"
+                  type="text"
+                  autoComplete="nopassword"
                   data-lpignore="true"
                   value={confirmPassword}
                   onChange={handleConfirmPasswordChange}

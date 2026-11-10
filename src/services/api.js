@@ -1,4 +1,4 @@
-import { initialCars, initialSubmissions, statsData } from './mockData'
+import { initialCars, statsData } from './mockData'
 
 const CARS_STORAGE_KEY = 'uzhnu_cars_data'
 const USER_STORAGE_KEY = 'uzhnu_auth_user'
@@ -304,10 +304,13 @@ export const api = {
   /**
    * Submissions history
    */
-  async getSubmissions() {
+  async getSubmissions(userEmail) {
     await delay(150)
     const custom = JSON.parse(localStorage.getItem(SUBMISSIONS_STORAGE_KEY) || '[]')
-    return [...custom, ...initialSubmissions]
+    if (!userEmail) return []
+
+    const normalizedEmail = userEmail.trim().toLowerCase()
+    return custom.filter((submission) => submission.userEmail === normalizedEmail)
   },
 
   async addSubmission(submissionData) {
@@ -317,8 +320,9 @@ export const api = {
       id: Date.now(),
       title: submissionData.title,
       subtitle: submissionData.subtitle,
-      status: 'pending',
-      statusLabel: 'На модерації ⏳',
+      userEmail: submissionData.userEmail?.trim().toLowerCase(),
+      status: 'approved',
+      statusLabel: 'Опубліковано ✅',
       createdAt: new Date().toISOString(),
     }
     custom.unshift(item)

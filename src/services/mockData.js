@@ -71,19 +71,4 @@ export const statsData = {
   },
 }
 
-export const initialSubmissions = [
-  {
-    id: 1,
-    title: 'Skoda Fabia (2015, 1.4 TDI)',
-    subtitle: 'Викладач: Семків О. М. • Кафедра ІСТ • Надіслано сьогодні',
-    status: 'pending',
-    statusLabel: 'На модерації ⏳',
-  },
-  {
-    id: 2,
-    title: 'BMW 3 Series (2019, 2.0 Petrol)',
-    subtitle: 'Викладач: Бучук Р. Ю. • Кафедра ІПЗ • Опубліковано в каталозі',
-    status: 'approved',
-    statusLabel: 'Опубліковано ✅',
-  },
-]
+export const initialSubmissions = []

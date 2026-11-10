@@ -36,13 +36,13 @@ export function AddCarPage({ user: propUser }) {
 
   useEffect(() => {
     let isMounted = true
-    api.getSubmissions().then((data) => {
+    api.getSubmissions(activeUser?.email).then((data) => {
       if (isMounted) setSubmissions(data)
     })
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [activeUser?.email])
 
   // 4.2. Додайте обробники файлу
   const processImageFile = (file) => {
@@ -124,10 +124,14 @@ export function AddCarPage({ user: propUser }) {
     setIsSubmitting(true)
 
     const title = `${carModel.trim()} (${year})`
-    const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Надіслано щойно`
+    const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Опубліковано щойно`
 
     try {
-      const newSubmission = await api.addSubmission({ title, subtitle })
+      const newSubmission = await api.addSubmission({
+        title,
+        subtitle,
+        userEmail: activeUser?.email,
+      })
       setSubmissions((prev) => [newSubmission, ...prev])
 
       // Also create car in the local catalog
@@ -191,7 +195,7 @@ export function AddCarPage({ user: propUser }) {
           <div>
             <h1 className={styles.title}>Запропонувати авто викладача</h1>
             <p className={styles.subtitle}>
-              Заповніть детальну інформацію про автомобіль для перевірки модератором
+              Заповніть детальну інформацію про автомобіль для публікації в каталозі
             </p>
           </div>
           <span className={styles.authorBadge}>
@@ -202,7 +206,7 @@ export function AddCarPage({ user: propUser }) {
 
         {submittedMessage && (
           <div className={styles.successMessage} role="status">
-            🎉 Дякуємо! Анкету &quot;{lastSubmittedTitle}&quot; успішно надіслано на модерацію.
+            🎉 Дякуємо! Автомобіль &quot;{lastSubmittedTitle}&quot; одразу опубліковано в каталозі.
           </div>
         )}
 
@@ -467,9 +471,7 @@ export function AddCarPage({ user: propUser }) {
           </div>
 
           <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-            <span>
-              {isSubmitting ? 'Відправка на модерацію... ⏳' : 'Відправити анкету на модерацію'}
-            </span>
+            <span>{isSubmitting ? 'Публікація авто... ⏳' : 'Опублікувати авто'}</span>
             {!isSubmitting && <span>🚀</span>}
           </button>
         </form>
@@ -480,9 +482,7 @@ export function AddCarPage({ user: propUser }) {
         <div className={styles.historyHeader}>
           <div>
             <h2 className={styles.historyTitle}>Історія ваших пропозицій</h2>
-            <p className={styles.subtitle}>
-              Статус перевірки надісланих вами автомобілів адміністрацією
-            </p>
+            <p className={styles.subtitle}>Автомобілі, які ви додали до каталогу</p>
           </div>
           <span className={styles.historyBadge}>Всього: {submissions.length} авто</span>
         </div>
@@ -498,15 +498,14 @@ export function AddCarPage({ user: propUser }) {
       <Modal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Заявку успішно прийнято"
+        title="Автомобіль опубліковано"
       >
         <div className={styles.modalSuccessContent}>
           <div className={styles.successIconBadge}>✓</div>
-          <h4 className={styles.modalSuccessTitle}>Автомобіль надіслано на розгляд!</h4>
+          <h4 className={styles.modalSuccessTitle}>Автомобіль опубліковано!</h4>
           <p className={styles.modalSuccessText}>
-            Вашу пропозицію <strong>&quot;{lastSubmittedTitle}&quot;</strong> додано до списку
-            модерації. Після перевірки викладачем або адміністратором статус автоматично оновиться в
-            історії пропозицій.
+            Вашу пропозицію <strong>&quot;{lastSubmittedTitle}&quot;</strong> додано до каталогу та
+            історії пропозицій зі статусом «Опубліковано».
           </p>
           <button
             type="button"
