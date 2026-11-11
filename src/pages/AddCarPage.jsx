@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { SubmissionItem } from '../components/SubmissionItem/SubmissionItem'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../hooks/useAuth'
+import { useCars } from '../hooks/useCars'
 import { api } from '../services/api'
+import { compressImage } from '../utils/compressImage'
 import styles from './AddCarPage.module.css'
 
+const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1000'
+
 export function AddCarPage({ user: propUser }) {
+  const navigate = useNavigate()
   const { user: authUser } = useAuth()
+  const { addCar } = useCars()
   const activeUser = authUser || propUser
 
   const [submissions, setSubmissions] = useState([])
@@ -45,43 +52,37 @@ export function AddCarPage({ user: propUser }) {
   }, [activeUser?.email])
 
   // 4.2. Додайте обробники файлу
-  const processImageFile = (file) => {
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setImageError('Будь ласка, виберіть файл зображення')
+  const processImageFile = async (file) => {
+    if (!file) {
+      setCarImage('')
+      setImageError('')
       return
     }
 
     if (file.size > 10 * 1024 * 1024) {
+      setCarImage('')
       setImageError('Розмір файлу не повинен перевищувати 10 МБ')
       return
     }
 
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setCarImage(reader.result)
-        setImageError('')
-      }
+    try {
+      const compressedImage = await compressImage(file)
+      setCarImage(compressedImage)
+      setImageError('')
+    } catch (error) {
+      setCarImage('')
+      setImageError(error.message || 'Не вдалося обробити файл')
     }
-
-    reader.onerror = () => {
-      setImageError('Не вдалося прочитати файл')
-    }
-
-    reader.readAsDataURL(file)
   }
 
-  const handleImageChange = (e) => {
-    processImageFile(e.target.files?.[0])
+  const handleImageChange = async (e) => {
+    await processImageFile(e.target.files?.[0])
   }
 
-  const handleImageDrop = (e) => {
+  const handleImageDrop = async (e) => {
     e.preventDefault()
     setIsDraggingImage(false)
-    processImageFile(e.dataTransfer.files?.[0])
+    await processImageFile(e.dataTransfer.files?.[0])
   }
 
   const validate = () => {
@@ -127,14 +128,6 @@ export function AddCarPage({ user: propUser }) {
     const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Опубліковано щойно`
 
     try {
-      const newSubmission = await api.addSubmission({
-        title,
-        subtitle,
-        userEmail: activeUser?.email,
-      })
-      setSubmissions((prev) => [newSubmission, ...prev])
-
-      // Also create car in the local catalog
       const fuelLabels = {
         diesel: 'Дизель',
         petrol: 'Бензин',
@@ -148,8 +141,7 @@ export function AddCarPage({ user: propUser }) {
         robot: 'Роботизована',
       }
 
-      // 4.3. Передайте фото в api.addCar
-      await api.addCar({
+      const carData = {
         brand: carModel.split(' ')[0] || carModel,
         model: carModel.split(' ').slice(1).join(' ') || '',
         year,
@@ -158,9 +150,18 @@ export function AddCarPage({ user: propUser }) {
         fuel: fuelLabels[fuelType] || fuelType,
         transmission: transmissionLabels[transmission] || transmission,
         engineVolume,
-        imageUrl: carImage,
+        imageUrl: carImage || DEFAULT_CAR_IMAGE,
         notes,
+      }
+
+      await addCar(carData)
+
+      const newSubmission = await api.addSubmission({
+        title,
+        subtitle,
+        userEmail: activeUser?.email,
       })
+      setSubmissions((prev) => [newSubmission, ...prev])
 
       setLastSubmittedTitle(title)
       setSubmittedMessage(true)
@@ -179,6 +180,7 @@ export function AddCarPage({ user: propUser }) {
       setImageError('')
 
       setTimeout(() => setSubmittedMessage(false), 5000)
+      navigate('/')
     } catch (err) {
       alert(err.message || 'Помилка при додаванні авто')
     } finally {
@@ -436,9 +438,7 @@ export function AddCarPage({ user: propUser }) {
                 ) : (
                   <>
                     <div className={styles.uploadIcon}>+</div>
-                    <p className={styles.uploadText}>
-                      Перетягніть фото авто сюди або оберіть файл на пристрої
-                    </p>
+                    <p className={styles.uploadText}>Натисніть або перетягніть фото авто сюди</p>
                     <p className={styles.uploadHint}>
                       Підтримуються формати JPG, PNG, WEBP до 10 МБ
                     </p>

@@ -55,16 +55,37 @@ export function useCars() {
 
     try {
       await api.toggleFavorite(carId, currentFav)
-    } catch {
-      // Revert if API fails
+    } catch (err) {
+      setError(err.message || 'Не вдалося оновити обране')
       setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, favorite: currentFav } : c)))
+      setSelectedCar((prev) =>
+        prev && prev.id === carId ? { ...prev, favorite: currentFav } : prev,
+      )
     }
   }, [])
 
   const addCar = useCallback(async (newCarData) => {
-    const created = await api.addCar(newCarData)
-    setCars((prev) => [created, ...prev])
-    return created
+    setError(null)
+    try {
+      const created = await api.addCar(newCarData)
+      setCars((prev) => [created, ...prev])
+      return created
+    } catch (err) {
+      setError(err.message || 'Не вдалося додати автомобіль')
+      throw err
+    }
+  }, [])
+
+  const deleteCar = useCallback(async (carId) => {
+    setError(null)
+    try {
+      await api.deleteCar(carId)
+      setCars((prev) => prev.filter((car) => car.id !== carId))
+      setSelectedCar((prev) => (prev?.id === carId ? null : prev))
+    } catch (err) {
+      setError(err.message || 'Не вдалося видалити автомобіль')
+      throw err
+    }
   }, [])
 
   const resetFilters = useCallback(() => {
@@ -117,6 +138,7 @@ export function useCars() {
     cars,
     filteredCars,
     isLoading,
+    loading: isLoading,
     error,
     searchTerm,
     setSearchTerm,
@@ -134,6 +156,7 @@ export function useCars() {
     setSelectedCar,
     toggleFavorite,
     addCar,
+    deleteCar,
     resetFilters,
     refetch: fetchCars,
   }

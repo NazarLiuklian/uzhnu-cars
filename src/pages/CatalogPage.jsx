@@ -26,6 +26,7 @@ export function CatalogPage() {
     selectedCar,
     setSelectedCar,
     toggleFavorite,
+    deleteCar,
     resetFilters,
     refetch,
   } = useCars()
@@ -93,6 +94,7 @@ export function CatalogPage() {
                 car={car}
                 showFavorite={isAuth}
                 onToggleFavorite={toggleFavorite}
+                onDelete={isAuth ? deleteCar : undefined}
                 onClick={setSelectedCar}
               />
             ))}

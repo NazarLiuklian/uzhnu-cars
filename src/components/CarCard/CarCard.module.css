@@ -50,6 +50,29 @@
   color: #e11d48;
 }
 
+.deleteButton {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  color: #dc2626;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+}
+
+.deleteButton:hover {
+  transform: scale(1.15);
+}
+
 .imagePlaceholder {
   height: 11rem;
   background-color: #f1f5f9;

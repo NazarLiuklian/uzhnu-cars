@@ -1,6 +1,7 @@
+import { Trash2 } from 'lucide-react'
 import styles from './CarCard.module.css'
 
-export function CarCard({ car, showFavorite, onToggleFavorite, onClick }) {
+export function CarCard({ car, showFavorite, onToggleFavorite, onDelete, onClick }) {
   const isFav = car.favorite
 
   return (
@@ -27,6 +28,21 @@ export function CarCard({ car, showFavorite, onToggleFavorite, onClick }) {
           title={isFav ? 'В обраному' : 'Додати в обране'}
         >
           {isFav ? '♥' : '♡'}
+        </button>
+      )}
+
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            void onDelete(car.id).catch(() => {})
+          }}
+          className={styles.deleteButton}
+          aria-label={`Видалити ${car.brand} ${car.model}`}
+          title="Видалити авто"
+        >
+          <Trash2 size={16} aria-hidden="true" />
         </button>
       )}
 

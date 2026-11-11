@@ -1,77 +1,43 @@
 import { initialCars, statsData } from './mockData'
 
-const CARS_STORAGE_KEY = 'uzhnu_cars_data'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const USER_STORAGE_KEY = 'uzhnu_auth_user'
 const REGISTERED_USER_STORAGE_KEY = 'registered_user'
 const SUBMISSIONS_STORAGE_KEY = 'uzhnu_submissions'
-const FAVORITES_STORAGE_KEY = 'uzhnu_favorites'
+const DEFAULT_CAR_IMAGE =
+  'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=70'
 
-// Helper for simulated network delay
 const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms))
 
+async function request(path, options = {}) {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  })
+
+  if (!response.ok) {
+    let message = `Запит не виконано (${response.status})`
+    try {
+      const body = await response.json()
+      if (body?.message) message = body.message
+    } catch {
+      // Use the status-based message when the server does not return JSON.
+    }
+    throw new Error(message)
+  }
+
+  return response.status === 204 ? null : response.json()
+}
+
 export const api = {
-  /**
-   * Fetch cars using fetch API with simulated latency and local storage synchronization
-   */
   async getCars() {
     await delay(300)
-
-    // Check if cars are already saved in localStorage
-    const savedCars = localStorage.getItem(CARS_STORAGE_KEY)
-    if (savedCars) {
-      try {
-        const parsed = JSON.parse(savedCars)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const favorites = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '{}')
-          const baseUrls = {
-            1: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/2019_BMW_318d_SE_Automatic_2.0_Front.jpg/1280px-2019_BMW_318d_SE_Automatic_2.0_Front.jpg',
-            2: 'https://media.ed.edmunds-media.com/audi/a6/2018/oem/2018_audi_a6_sedan_30-tfsi-prestige-quattro_fq_oem_2_1600.jpg',
-            3: 'https://upload.wikimedia.org/wikipedia/commons/9/91/VW_Passat_B8_Limousine_2.0_TDI_Highline.JPG',
-            4: 'https://wieck-nissanao-production.s3.us-west-1.amazonaws.com/releaseInlineImages/67c8675762e75f9327220cb00aba8abd59fc9db3',
-          }
-
-          const upgraded = parsed.map((car) => {
-            const freshUrl = baseUrls[car.id] || car.imageUrl
-            return {
-              ...car,
-              imageUrl: freshUrl,
-              favorite: favorites[car.id] !== undefined ? favorites[car.id] : Boolean(car.favorite),
-            }
-          })
-
-          localStorage.setItem(CARS_STORAGE_KEY, JSON.stringify(upgraded))
-          return upgraded
-        }
-      } catch {
-        // Fallback if parsing fails
-      }
-    }
-
-    let baseCars = []
-    try {
-      const response = await fetch('/cars.json')
-      if (response.ok) {
-        baseCars = await response.json()
-      } else {
-        baseCars = initialCars
-      }
-    } catch {
-      baseCars = initialCars
-    }
-
-    const favorites = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '{}')
-    const finalCars = baseCars.map((car) => ({
-      ...car,
-      favorite: favorites[car.id] !== undefined ? favorites[car.id] : Boolean(car.favorite),
-    }))
-
-    localStorage.setItem(CARS_STORAGE_KEY, JSON.stringify(finalCars))
-    return finalCars
+    return request('/cars')
   },
 
-  /**
-   * Add a new car into the mock backend with localStorage persistence
-   */
   async addCar(newCarData) {
     await delay(350)
 
@@ -79,9 +45,7 @@ export const api = {
       throw new Error('Марка та власник автомобіля є обовʼязковими')
     }
 
-    const currentCars = await this.getCars()
     const newCar = {
-      id: Date.now(),
       brand: newCarData.brand,
       model: newCarData.model || '',
       year: Number(newCarData.year) || new Date().getFullYear(),
@@ -90,36 +54,29 @@ export const api = {
       fuel: newCarData.fuel || 'Бензин',
       transmission: newCarData.transmission || 'Автоматична',
       engineVolume: newCarData.engineVolume || '2.0 л',
-      imageUrl:
-        newCarData.imageUrl ||
-        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
+      imageUrl: newCarData.imageUrl || DEFAULT_CAR_IMAGE,
       imageText: `[ Фото Авто ${newCarData.brand} ]`,
       favorite: false,
       notes: newCarData.notes || '',
     }
 
-    const updatedCars = [newCar, ...currentCars]
-    localStorage.setItem(CARS_STORAGE_KEY, JSON.stringify(updatedCars))
-    return newCar
+    return request('/cars', {
+      method: 'POST',
+      body: JSON.stringify(newCar),
+    })
   },
 
-  /**
-   * Toggle favorite state of a car
-   */
+  async deleteCar(carId) {
+    await delay(250)
+    await request(`/cars/${carId}`, { method: 'DELETE' })
+    return carId
+  },
+
   async toggleFavorite(carId, currentFavorite) {
-    const favorites = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '{}')
-    favorites[carId] = !currentFavorite
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites))
-
-    const currentCars = JSON.parse(localStorage.getItem(CARS_STORAGE_KEY) || '[]')
-    if (currentCars.length > 0) {
-      const updated = currentCars.map((c) =>
-        c.id === carId ? { ...c, favorite: !currentFavorite } : c,
-      )
-      localStorage.setItem(CARS_STORAGE_KEY, JSON.stringify(updated))
-    }
-
-    return !currentFavorite
+    return request(`/cars/${carId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ favorite: !currentFavorite }),
+    })
   },
 
   /**
