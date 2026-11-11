@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import styles from './AuthGatePage.module.css'
 
 export function AuthGatePage() {
+  const location = useLocation()
+  const returnTo = location.state?.from || '/add-car'
+
   return (
     <main className={styles.main}>
       <div className={styles.card}>
@@ -11,7 +14,7 @@ export function AuthGatePage() {
           <h2 className={styles.title}>Потрібна авторизація</h2>
           <p className={styles.subtitle}>
             Щоб запропонувати нове авто в каталог та відстежувати його модерацію, увійдіть через
-            акаунт УжНУ.
+            акаунт Ужгородського університету.
           </p>
         </div>
 
@@ -24,7 +27,7 @@ export function AuthGatePage() {
         </div>
 
         <div className={styles.buttonGroup}>
-          <Link to="/login" className={styles.primaryButton}>
+          <Link to="/login" state={{ from: returnTo }} className={styles.primaryButton}>
             <span>Перейти до авторизації →</span>
           </Link>
           <Link to="/" className={styles.secondaryButton}>

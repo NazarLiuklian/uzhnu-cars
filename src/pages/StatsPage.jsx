@@ -1,9 +1,23 @@
+import { useEffect, useState } from 'react'
 import { StatBar } from '../components/StatBar/StatBar'
+import { api } from '../services/api'
 import { statsData } from '../services/mockData'
 import styles from './StatsPage.module.css'
 
 export function StatsPage() {
-  const { engineRatio, topBrands, counters } = statsData
+  const [stats, setStats] = useState(statsData)
+
+  useEffect(() => {
+    let isMounted = true
+    api.getStats().then((data) => {
+      if (isMounted) setStats(data)
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const { engineRatio, topBrands, counters } = stats
 
   return (
     <main className={styles.main}>
@@ -66,7 +80,7 @@ export function StatsPage() {
         </div>
         <div className={styles.metricCard}>
           <span className={styles.metricNumber}>{counters.averageYear}</span>
-          <span className={styles.metricLabel}>Середній вік</span>
+          <span className={styles.metricLabel}>Середній рік випуску</span>
         </div>
       </div>
     </main>

@@ -1,18 +1,25 @@
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import styles from './Header.module.css'
 
-export function Header({ user, onLogout }) {
+export function Header({ user: propUser }) {
   const location = useLocation()
+  const { user: authUser } = useAuth()
+  const user = propUser !== undefined ? propUser : authUser
   const isAuth = Boolean(user)
+
   const isLoginPage = location.pathname === '/login'
   const isProfilePage = location.pathname === '/profile'
+
+  const isAvatarImage =
+    user?.avatar && (user.avatar.startsWith('http') || user.avatar.startsWith('data:'))
 
   if (isLoginPage) {
     return (
       <header className={styles.header}>
         <div className={styles.container}>
           <Link to="/" className={styles.brand}>
-            <div className={styles.logoBadge}>🚗 УжНУ Cars</div>
+            <div className={styles.logoBadge}>🚗 УжУ Cars</div>
           </Link>
           <span className={styles.authBadge}>Система автентифікації</span>
         </div>
@@ -24,8 +31,7 @@ export function Header({ user, onLogout }) {
     <header className={styles.header}>
       <div className={styles.container}>
         <Link to="/" className={styles.brand}>
-          <div className={styles.logoBadge}>🚗 УжНУ Cars</div>
-          <span className={styles.subtitle}>Каталог автомобілів</span>
+          <div className={styles.logoBadge}>🚗 УжУ Cars</div>
         </Link>
 
         <nav className={styles.nav}>
@@ -54,9 +60,6 @@ export function Header({ user, onLogout }) {
                 Додати авто
               </NavLink>
               <span className={styles.profileActiveTag}>Налаштування профілю</span>
-              <button type="button" onClick={onLogout} className={styles.logoutButton}>
-                Вийти
-              </button>
             </>
           ) : (
             <>
@@ -71,14 +74,20 @@ export function Header({ user, onLogout }) {
 
               {isAuth ? (
                 <Link to="/profile" className={styles.userWidget} title="Налаштування профілю">
-                  <div className={styles.avatar}>{user.avatar || 'НЛ'}</div>
+                  <div className={styles.avatar}>
+                    {isAvatarImage ? (
+                      <img src={user.avatar} alt={user.name} className={styles.avatarImg} />
+                    ) : (
+                      user.avatar || '👤'
+                    )}
+                  </div>
                   <div className={styles.userInfo}>
                     <span className={styles.userName}>{user.name}</span>
                     <span className={styles.userEmail}>{user.email}</span>
                   </div>
                 </Link>
               ) : (
-                <Link to="/login" className={styles.loginButton}>
+                <Link to="/login" state={{ from: '/profile' }} className={styles.loginButton}>
                   Увійти
                 </Link>
               )}
