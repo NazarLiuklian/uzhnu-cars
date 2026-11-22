@@ -148,13 +148,22 @@ export async function initDb() {
     let adminId = existingAdmin?.[0]?.id
 
     if (!adminId) {
-      const adminHash = await bcrypt.hash('admin123', 10)
+      const adminHash = await bcrypt.hash('admin', 10)
       const [res] = await pool.query(
-        'INSERT INTO users (name, last_name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+        'INSERT IGNORE INTO users (name, last_name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
         ['Назар', 'Люклян', 'nazar.liuklian@student.uzhnu.edu.ua', adminHash, 'admin'],
       )
       adminId = res.insertId
       console.log('[Database] Створено адміністратора: nazar.liuklian@student.uzhnu.edu.ua')
+    } else {
+      const [adminRow] = await pool.query('SELECT password_hash FROM users WHERE id = ?', [adminId])
+      if (
+        adminRow[0]?.password_hash &&
+        (await bcrypt.compare('admin123', adminRow[0].password_hash))
+      ) {
+        const adminHash = await bcrypt.hash('admin', 10)
+        await pool.query('UPDATE users SET password_hash = ? WHERE id = ?', [adminHash, adminId])
+      }
     }
 
     // 6. Seed: Демо-користувач

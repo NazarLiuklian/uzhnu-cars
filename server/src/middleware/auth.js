@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import { pool } from '../db.js'
 
 dotenv.config()
 
@@ -33,11 +34,27 @@ export function authMiddleware(req, res, next) {
 /**
  * Middleware для перевірки ролі адміністратора (role === 'admin')
  */
-export function adminMiddleware(req, res, next) {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({
-      error: 'Доступ заборонено. Потрібні права адміністратора.',
+export async function adminMiddleware(req, res, next) {
+  try {
+    if (!req.user?.id) {
+      return res.status(403).json({
+        error: 'Доступ заборонено. Потрібні права адміністратора.',
+      })
+    }
+
+    const [rows] = await pool.query('SELECT role FROM users WHERE id = ?', [req.user.id])
+    if (rows.length === 0 || rows[0].role !== 'admin') {
+      return res.status(403).json({
+        error: 'Доступ заборонено. Потрібні права адміністратора.',
+      })
+    }
+
+    req.user.role = 'admin'
+    next()
+  } catch (error) {
+    console.error('[Admin Middleware Error]:', error)
+    return res.status(500).json({
+      error: 'Не вдалося перевірити права адміністратора.',
     })
   }
-  next()
 }

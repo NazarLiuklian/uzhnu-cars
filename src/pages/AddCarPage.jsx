@@ -42,13 +42,18 @@ export function AddCarPage({ user: propUser }) {
 
   useEffect(() => {
     let isMounted = true
-    api.getSubmissions(activeUser?.email).then((data) => {
-      if (isMounted) setSubmissions(data)
-    })
+    api
+      .getMyCars()
+      .then((cars) => {
+        if (isMounted) setSubmissions(cars || [])
+      })
+      .catch(() => {
+        if (isMounted) setSubmissions([])
+      })
     return () => {
       isMounted = false
     }
-  }, [activeUser?.email])
+  }, [activeUser?.id])
 
   const processImageFile = async (file) => {
     if (!file) {
@@ -149,8 +154,6 @@ export function AddCarPage({ user: propUser }) {
     setIsSubmitting(true)
 
     const title = `${carModel.trim()} (${year})`
-    const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Очікує модерації`
-
     try {
       const carData = {
         brand: carModel.split(' ')[0] || carModel,
@@ -174,13 +177,8 @@ export function AddCarPage({ user: propUser }) {
       }
 
       await addCar(carData)
-
-      const newSubmission = await api.addSubmission({
-        title,
-        subtitle,
-        userEmail: activeUser?.email,
-      })
-      setSubmissions((prev) => [newSubmission, ...prev])
+      const cars = await api.getMyCars()
+      setSubmissions(cars || [])
 
       setLastSubmittedTitle(title)
       setSubmittedMessage(true)

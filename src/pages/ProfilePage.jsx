@@ -137,9 +137,11 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
       }
 
       if (updateProfile) {
-        await updateProfile(updated)
+        const savedUser = await updateProfile(updated)
+        onUpdateUser?.(savedUser || updated)
+      } else {
+        onUpdateUser?.(updated)
       }
-      onUpdateUser?.(updated)
 
       setNewPassword('')
 

@@ -81,6 +81,30 @@ carsRouter.get('/', async (req, res) => {
 })
 
 /**
+ * GET /api/cars/my
+ * Захищений список усіх автомобілів поточного користувача
+ */
+carsRouter.get('/my', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `
+      SELECT c.*, u.name AS author_name, u.email AS author_email
+      FROM cars c
+      LEFT JOIN users u ON c.created_by = u.id
+      WHERE c.created_by = ?
+      ORDER BY c.created_at DESC, c.id DESC
+    `,
+      [req.user.id],
+    )
+
+    return res.json(rows.map(formatCarRecord))
+  } catch (error) {
+    console.error('[Get My Cars Error]:', error)
+    return res.status(500).json({ error: 'Не вдалося отримати історію ваших пропозицій' })
+  }
+})
+
+/**
  * GET /api/cars/pending
  * Захищений маршрут тільки для admin: список авто на модерації
  */

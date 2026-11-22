@@ -96,6 +96,13 @@ export const api = {
   },
 
   /**
+   * Отримання всіх заявок поточного користувача
+   */
+  async getMyCars() {
+    return request('/cars/my')
+  },
+
+  /**
    * Створення заявки на додавання авто (status: 'pending')
    */
   async addCar(newCarData) {
