@@ -136,12 +136,39 @@
   transition: all 0.15s ease-in-out;
 }
 
+.input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.input[type='number']::-webkit-outer-spin-button,
+.input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .input:focus,
 .select:focus,
 .textarea:focus {
   outline: none;
   border-color: #0ea5e9;
   box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
+}
+
+.inputError {
+  border-color: #f43f5e !important;
+  background-color: #fffafb;
+}
+
+.inputError:focus {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25) !important;
+}
+
+.fieldError {
+  font-size: 0.75rem;
+  color: #e11d48;
+  font-weight: 500;
+  margin-top: 0.2rem;
 }
 
 .uploadZone {
@@ -154,12 +181,28 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
   text-align: center;
 }
 
 .uploadZone:hover {
   border-color: #0ea5e9;
+}
+
+.uploadZoneActive {
+  border-color: #0284c7;
+  background-color: #e0f2fe;
+  transform: scale(1.01);
+}
+
+.imagePreview {
+  width: 100%;
+  max-height: 16rem;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .uploadIcon {
@@ -215,11 +258,17 @@
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
+  border: none;
+  transition: all 0.15s ease-in-out;
 }
 
-.submitBtn:hover {
+.submitBtn:hover:not(:disabled) {
   background-color: #f59e0b;
+}
+
+.submitBtn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
 }
 
 .historyCard {
@@ -272,6 +321,60 @@
   font-size: 0.875rem;
   font-weight: 600;
   text-align: center;
+}
+
+/* Modal styles for submission */
+.modalSuccessContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.successIconBadge {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 9999px;
+  background-color: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  border: 1px solid #a7f3d0;
+}
+
+.modalSuccessTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.modalSuccessText {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.modalOkBtn {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0ea5e9;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.modalOkBtn:hover {
+  background-color: #0284c7;
 }
 
 @media (min-width: 640px) {

@@ -35,6 +35,8 @@
   font-weight: 500;
   cursor: pointer;
   padding: 0;
+  border: none;
+  background: none;
 }
 
 .resetButton:hover {
@@ -105,13 +107,14 @@
 }
 
 .fuelList {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
+  width: 100%;
 }
 
 .fuelPill {
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -120,6 +123,11 @@
   color: #475569;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fuelPill:hover {
@@ -141,13 +149,20 @@
 .yearInput {
   width: 100%;
   text-align: center;
-  padding: 0.375rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   background-color: #f8fafc;
   font-weight: 500;
   color: #0f172a;
+  -moz-appearance: textfield;
+}
+
+.yearInput::-webkit-outer-spin-button,
+.yearInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .yearSeparator {

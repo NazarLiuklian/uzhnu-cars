@@ -22,6 +22,17 @@ export default [
     },
   },
   {
+    files: ['server/**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node },
+    },
+    rules: {
+      'no-unused-vars': 'off',
+    },
+  },
+  {
     files: ['src/**/*.cy.jsx'],
     languageOptions: {
       globals: { cy: 'readonly', describe: 'readonly', it: 'readonly' },

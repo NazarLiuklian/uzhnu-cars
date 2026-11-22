@@ -6,19 +6,23 @@ export function SidebarFilter({
   onSelectDepartment,
   selectedFuel,
   onSelectFuel,
+  minYear = '',
+  onMinYearChange,
+  maxYear = '',
+  onMaxYearChange,
   onlyFavorites,
   onToggleFavorites,
   onReset,
 }) {
+  const fuelOptions = ['Дизель', 'Бензин', 'Електро', 'Гібрид']
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.headerRow}>
         <span className={styles.badge}>Фільтри</span>
-        {isAuth && (
-          <button type="button" onClick={onReset} className={styles.resetButton}>
-            Скинути
-          </button>
-        )}
+        <button type="button" onClick={onReset} className={styles.resetButton}>
+          Скинути
+        </button>
       </div>
 
       {isAuth && (
@@ -64,42 +68,41 @@ export function SidebarFilter({
       <div className={styles.group}>
         <label className={styles.label}>Тип палива</label>
         <div className={styles.fuelList}>
-          <button
-            type="button"
-            onClick={() => onSelectFuel(selectedFuel === 'Електро' ? '' : 'Електро')}
-            className={`${styles.fuelPill} ${
-              selectedFuel === 'Електро' ? styles.fuelPillActive : ''
-            }`}
-          >
-            Електро
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelectFuel(selectedFuel === 'Бензин' ? '' : 'Бензин')}
-            className={`${styles.fuelPill} ${
-              selectedFuel === 'Бензин' ? styles.fuelPillActive : ''
-            }`}
-          >
-            Бензин
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelectFuel(selectedFuel === 'Дизель' ? '' : 'Дизель')}
-            className={`${styles.fuelPill} ${
-              selectedFuel === 'Дизель' ? styles.fuelPillActive : ''
-            }`}
-          >
-            Дизель
-          </button>
+          {fuelOptions.map((fuel) => (
+            <button
+              key={fuel}
+              type="button"
+              onClick={() => onSelectFuel(selectedFuel === fuel ? '' : fuel)}
+              className={`${styles.fuelPill} ${selectedFuel === fuel ? styles.fuelPillActive : ''}`}
+            >
+              {fuel}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className={styles.group}>
         <label className={styles.label}>Рік випуску</label>
         <div className={styles.yearRow}>
-          <input type="text" value="2000" className={styles.yearInput} readOnly />
+          <input
+            type="number"
+            min="1990"
+            max="2026"
+            placeholder="Від"
+            value={minYear}
+            onChange={(e) => onMinYearChange && onMinYearChange(e.target.value)}
+            className={styles.yearInput}
+          />
           <span className={styles.yearSeparator}>-</span>
-          <input type="text" value="2026" className={styles.yearInput} readOnly />
+          <input
+            type="number"
+            min="1990"
+            max="2026"
+            placeholder="До"
+            value={maxYear}
+            onChange={(e) => onMaxYearChange && onMaxYearChange(e.target.value)}
+            className={styles.yearInput}
+          />
         </div>
       </div>
     </aside>
