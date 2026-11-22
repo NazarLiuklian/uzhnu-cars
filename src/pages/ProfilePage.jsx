@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../hooks/useAuth'
@@ -12,29 +12,21 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
 
   // Baseline stored user data
   const nameParts = (activeUser?.name || '').split(' ')
-  const baseFirstName = nameParts[0] || ''
-  const baseLastName = nameParts.slice(1).join(' ') || ''
+  const baseFirstName = activeUser?.firstName || nameParts[0] || ''
+  const baseLastName = activeUser?.lastName || nameParts.slice(1).join(' ') || ''
   const baseEmail = activeUser?.email || ''
   const baseAvatar = activeUser?.avatar || ''
-
-  const registeredUser = api.getRegisteredUser()
-  const savedPassword = activeUser?.password || registeredUser?.password || ''
 
   const [savedBaseline, setSavedBaseline] = useState({
     firstName: baseFirstName,
     lastName: baseLastName,
-    email: baseEmail,
     avatar: baseAvatar,
-    currentPassword: savedPassword,
   })
 
   // Editable form states
   const [firstName, setFirstName] = useState(baseFirstName)
   const [lastName, setLastName] = useState(baseLastName)
-  const [email, setEmail] = useState(baseEmail)
   const [avatar, setAvatar] = useState(baseAvatar)
-
-  const [currentPassword, setCurrentPassword] = useState(savedPassword)
   const [newPassword, setNewPassword] = useState('')
 
   const [formErrors, setFormErrors] = useState({})
@@ -44,15 +36,72 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
   const [showPhotoModal, setShowPhotoModal] = useState(false)
   const [selectedFileBase64, setSelectedFileBase64] = useState('')
 
+  // Стан заявок на модерацію (для ролі admin)
+  const isAdmin = activeUser?.role === 'admin'
+  const [pendingCars, setPendingCars] = useState([])
+  const [loadingPending, setLoadingPending] = useState(false)
+  const [actionMessage, setActionMessage] = useState('')
+
+  useEffect(() => {
+    if (activeUser) {
+      const parts = (activeUser.name || '').split(' ')
+      const fn = activeUser.firstName || parts[0] || ''
+      const ln = activeUser.lastName || parts.slice(1).join(' ') || ''
+      const av = activeUser.avatar || ''
+      setFirstName(fn)
+      setLastName(ln)
+      setAvatar(av)
+      setSavedBaseline({
+        firstName: fn,
+        lastName: ln,
+        avatar: av,
+      })
+    }
+  }, [activeUser])
+
+  useEffect(() => {
+    if (isAdmin) {
+      setLoadingPending(true)
+      api
+        .getPendingCars()
+        .then((data) => setPendingCars(data || []))
+        .catch((err) => console.error('Помилка завантаження заявок на модерацію:', err))
+        .finally(() => setLoadingPending(false))
+    }
+  }, [isAdmin])
+
+  const handleApproveCar = async (carId) => {
+    try {
+      await api.approveCar(carId)
+      setPendingCars((prev) => prev.filter((c) => c.id !== carId))
+      setActionMessage('Автомобіль успішно опубліковано в каталозі!')
+      setTimeout(() => setActionMessage(''), 4000)
+    } catch (err) {
+      alert(err.message || 'Не вдалося опублікувати автомобіль')
+    }
+  }
+
+  const handleRejectCar = async (carId) => {
+    if (!window.confirm('Ви впевнені, що хочете відхилити та видалити цю заявку?')) {
+      return
+    }
+    try {
+      await api.deleteCar(carId)
+      setPendingCars((prev) => prev.filter((c) => c.id !== carId))
+      setActionMessage('Заявку успішно відхилено та видалено.')
+      setTimeout(() => setActionMessage(''), 4000)
+    } catch (err) {
+      alert(err.message || 'Не вдалося відхилити заявку')
+    }
+  }
+
   const isAvatarImage = avatar && (avatar.startsWith('http') || avatar.startsWith('data:'))
 
   // Check if any fields or avatar have been modified
   const hasChanges =
     firstName.trim() !== savedBaseline.firstName ||
     lastName.trim() !== savedBaseline.lastName ||
-    email.trim() !== savedBaseline.email ||
     avatar !== savedBaseline.avatar ||
-    currentPassword !== savedBaseline.currentPassword ||
     Boolean(newPassword.trim())
 
   const validate = () => {
@@ -66,11 +115,7 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
       errors.lastName = 'Введіть прізвище'
     }
 
-    if (!email.trim() || !email.includes('@')) {
-      errors.email = 'Введіть коректну адресу пошти'
-    }
-
-    if (newPassword && newPassword.length < 6) {
+    if (newPassword.trim() && newPassword.trim().length < 6) {
       errors.newPassword = 'Новий пароль повинен мати від 6 символів'
     }
 
@@ -83,14 +128,12 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
 
     try {
       const fullName = `${firstName.trim()} ${lastName.trim()}`
-      const passwordToSave = newPassword.trim() || currentPassword.trim()
       const updated = {
         name: fullName,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim(),
         avatar,
-        ...(passwordToSave ? { password: passwordToSave } : {}),
+        ...(newPassword.trim() ? { newPassword: newPassword.trim() } : {}),
       }
 
       if (updateProfile) {
@@ -98,21 +141,15 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
       }
       onUpdateUser?.(updated)
 
-      const finalPassword = passwordToSave
-      setCurrentPassword(finalPassword)
       setNewPassword('')
 
-      // Update saved baseline to hide the button
       setSavedBaseline({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim(),
         avatar,
-        currentPassword: finalPassword,
       })
 
       setSuccessMessage(true)
-
       setTimeout(() => {
         setSuccessMessage(false)
       }, 3000)
@@ -145,7 +182,14 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
     <main className={styles.main}>
       <div className={styles.card}>
         <div className={styles.headerText}>
-          <h1 className={styles.title}>Налаштування облікового запису</h1>
+          <h1 className={styles.title}>
+            Налаштування облікового запису
+            {isAdmin && (
+              <span className={styles.adminBadge} style={{ marginLeft: '0.75rem' }}>
+                Адміністратор {pendingCars.length > 0 && `(🔔 ${pendingCars.length} на модерації)`}
+              </span>
+            )}
+          </h1>
         </div>
 
         {successMessage && (
@@ -183,7 +227,7 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
           </button>
         </div>
 
-        {/* Unified Form without separator title blocks */}
+        {/* Form Fields */}
         <div className={styles.formGrid}>
           <div className={styles.grid2}>
             <div className={styles.fieldGroup}>
@@ -226,62 +270,35 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
             </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-                if (formErrors.email) setFormErrors((p) => ({ ...p, email: null }))
-              }}
-              className={`${styles.input} ${styles.highlightInput} ${
-                formErrors.email ? styles.inputError : ''
-              }`}
-              placeholder="example@email.com"
+              value={baseEmail}
+              readOnly
+              className={`${styles.input} ${styles.highlightInput}`}
+              placeholder="example@student.uzhnu.edu.ua"
             />
-            {formErrors.email && <span className={styles.fieldError}>{formErrors.email}</span>}
           </div>
 
-          <div className={styles.grid2}>
-            <div className={styles.fieldGroup}>
-              <label className={`${styles.label} ${styles.highlightLabel}`}>Поточний пароль</label>
-              <input
-                type="text"
-                autoComplete="off"
-                data-lpignore="true"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className={`${styles.input} ${styles.highlightInput}`}
-              />
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Новий пароль</label>
-              <input
-                type="text"
-                placeholder="Введіть новий пароль"
-                autoComplete="off"
-                data-lpignore="true"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value)
-                  if (formErrors.newPassword) setFormErrors((p) => ({ ...p, newPassword: null }))
-                }}
-                className={`${styles.input} ${formErrors.newPassword ? styles.inputError : ''}`}
-              />
-              {formErrors.newPassword && (
-                <span className={styles.fieldError}>{formErrors.newPassword}</span>
-              )}
-            </div>
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Новий пароль</label>
+            <input
+              type="text"
+              placeholder="Введіть новий пароль"
+              autoComplete="off"
+              data-lpignore="true"
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value)
+                if (formErrors.newPassword) setFormErrors((p) => ({ ...p, newPassword: null }))
+              }}
+              className={`${styles.input} ${formErrors.newPassword ? styles.inputError : ''}`}
+            />
+            {formErrors.newPassword && (
+              <span className={styles.fieldError}>{formErrors.newPassword}</span>
+            )}
           </div>
         </div>
 
         {/* Bottom Actions: Logout & Dynamic Save */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: '1rem',
-            borderTop: '1px solid #f1f5f9',
-          }}
-        >
+        <div className={styles.actionsRow}>
           <button
             type="button"
             onClick={async () => {
@@ -293,18 +310,127 @@ export function ProfilePage({ user: propUser, onUpdateUser }) {
             Вийти з акаунту
           </button>
 
-          {hasChanges && (
-            <button
-              type="button"
-              onClick={handleSave}
-              className={styles.saveBtn}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Збереження...' : 'Зберегти зміни'}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            className={styles.saveBtn}
+            disabled={isLoading || !hasChanges}
+          >
+            {isLoading ? 'Збереження...' : 'Зберегти зміни'}
+          </button>
         </div>
       </div>
+
+      {/* Панель адміністратора: Блок «Заявки на модерацію» */}
+      {isAdmin && (
+        <section className={styles.adminSection}>
+          <div className={styles.adminHeader}>
+            <h2 className={styles.adminTitle}>
+              <span>🛡️ Панель модерації автомобілів</span>
+            </h2>
+            <span
+              className={styles.adminBadge}
+              style={
+                pendingCars.length > 0
+                  ? { backgroundColor: '#fee2e2', color: '#b91c1c', fontWeight: 800 }
+                  : {}
+              }
+            >
+              {pendingCars.length > 0
+                ? `🔥 Очікують перевірки: ${pendingCars.length}`
+                : 'Усі заявки перевірено ✓'}
+            </span>
+          </div>
+
+          {actionMessage && (
+            <div className={styles.successBanner} role="status">
+              <span>✓</span>
+              <span>{actionMessage}</span>
+            </div>
+          )}
+
+          {loadingPending && (
+            <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+              Завантаження заявок із бази даних... ⏳
+            </p>
+          )}
+
+          {!loadingPending && pendingCars.length === 0 && (
+            <div className={styles.emptyPending}>
+              🎉 Усі заявки опрацьовано. Немає автомобілів, які очікують модерації.
+            </div>
+          )}
+
+          {!loadingPending && pendingCars.length > 0 && (
+            <div className={styles.pendingList}>
+              {pendingCars.map((car) => (
+                <div key={car.id} className={styles.pendingCard}>
+                  {car.image || car.imageUrl ? (
+                    <div className={styles.pendingImageWrapper}>
+                      <img
+                        src={car.image || car.imageUrl}
+                        alt={`${car.brand} ${car.model}`}
+                        className={styles.pendingImg}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className={styles.pendingInfo}>
+                    <h3 className={styles.pendingCarTitle}>
+                      {car.brand} {car.model} ({car.year} р.)
+                    </h3>
+                    <p className={styles.pendingCarTeacher}>
+                      👤 Викладач: <strong>{car.teacher_name || car.owner}</strong> • 🏛{' '}
+                      {car.department || car.faculty}
+                    </p>
+                    <div className={styles.pendingCarMeta}>
+                      <span className={styles.pendingMetaBadge}>
+                        Паливо: {car.fuel || car.fuel_type || 'Бензин'}
+                        {car.engineVolume || car.engine_volume
+                          ? ` (${car.engineVolume || car.engine_volume})`
+                          : ''}
+                      </span>
+                      {car.transmission && (
+                        <span className={styles.pendingMetaBadge}>КПП: {car.transmission}</span>
+                      )}
+                      {car.color && (
+                        <span className={styles.pendingMetaBadge}>Колір: {car.color}</span>
+                      )}
+                      {car.notes && (
+                        <span className={styles.pendingMetaBadge}>Нотатки: {car.notes}</span>
+                      )}
+                      {car.author_name && (
+                        <span className={styles.pendingMetaBadge}>
+                          Додав(ла): {car.author_name} ({car.author_email})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={styles.pendingActions}>
+                    <button
+                      type="button"
+                      className={styles.approveBtn}
+                      onClick={() => handleApproveCar(car.id)}
+                      title="Схвалити та опублікувати в каталозі"
+                    >
+                      ✓ Опублікувати
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.rejectBtn}
+                      onClick={() => handleRejectCar(car.id)}
+                      title="Відхилити та видалити заявку"
+                    >
+                      ✕ Відхилити
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Upload Photo Modal */}
       <Modal

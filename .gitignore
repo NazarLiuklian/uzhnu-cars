@@ -1,5 +1,12 @@
 node_modules
 dist
 .DS_Store
+.env
+.env.*
+!.env.example
+server/node_modules
+server/.env
+server/.env.*
+!server/.env.example
 cypress/screenshots
 cypress/videos

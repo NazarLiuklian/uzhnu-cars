@@ -3,19 +3,35 @@ import { api } from '../services/api'
 import { AuthContext } from './AuthContext'
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => api.getCurrentUser())
-  const [isLoading, setIsLoading] = useState(false)
+  const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Sync state if user changes in other tabs
+  // Перевірка сесії за JWT токеном при старті
   useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === 'uzhnu_auth_user') {
-        setUser(api.getCurrentUser())
+    let isMounted = true
+    const checkAuth = async () => {
+      try {
+        const currentUser = await api.getMe()
+        if (isMounted) {
+          setUser(currentUser)
+        }
+      } catch {
+        if (isMounted) {
+          setUser(null)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+
+    checkAuth()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const login = useCallback(async ({ email, password }) => {
@@ -50,21 +66,6 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const resetPassword = useCallback(async (credentials) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const updatedUser = await api.resetPassword(credentials)
-      return updatedUser
-    } catch (err) {
-      const message = err.message || 'Не вдалося скинути пароль'
-      setError(message)
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
   const logout = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -80,7 +81,7 @@ export function AuthProvider({ children }) {
     setIsLoading(true)
     setError(null)
     try {
-      const updated = await api.updateUser(data)
+      const updated = await api.updateProfile(data)
       setUser(updated)
       return updated
     } catch (err) {
@@ -94,13 +95,25 @@ export function AuthProvider({ children }) {
 
   const clearError = useCallback(() => setError(null), [])
 
+  const forgotPassword = useCallback(async (email) => {
+    setError(null)
+    return api.forgotPassword(email)
+  }, [])
+
+  const resetPassword = useCallback(async ({ email, code, newPassword }) => {
+    setError(null)
+    return api.resetPassword({ email, code, newPassword })
+  }, [])
+
   const value = {
     user,
     isAuth: Boolean(user),
+    isAdmin: user?.role === 'admin',
     isLoading,
     error,
     login,
     register,
+    forgotPassword,
     resetPassword,
     logout,
     updateProfile,

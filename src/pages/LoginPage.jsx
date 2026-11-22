@@ -6,7 +6,15 @@ import styles from './LoginPage.module.css'
 export function LoginPage({ onLogin }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, register, resetPassword, isLoading, error: authError, clearError } = useAuth()
+  const {
+    login,
+    register,
+    forgotPassword,
+    resetPassword,
+    isLoading,
+    error: authError,
+    clearError,
+  } = useAuth()
 
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [name, setName] = useState('')
@@ -16,12 +24,16 @@ export function LoginPage({ onLogin }) {
   const [formErrors, setFormErrors] = useState({})
 
   const [isResetMode, setIsResetMode] = useState(false)
+  const [resetStep, setResetStep] = useState(1)
   const [resetEmail, setResetEmail] = useState('')
+  const [resetCode, setResetCode] = useState('')
   const [resetNewPassword, setResetNewPassword] = useState('')
+  const [devCode, setDevCode] = useState('')
   const [resetMessage, setResetMessage] = useState('')
   const [resetError, setResetError] = useState('')
+  const [loginSuccessNotice, setLoginSuccessNotice] = useState('')
 
-  const handleResetPassword = async (e) => {
+  const handleRequestCode = async (e) => {
     e.preventDefault()
     setResetMessage('')
     setResetError('')
@@ -30,28 +42,77 @@ export function LoginPage({ onLogin }) {
       setResetError('Введіть адресу електронної пошти')
       return
     }
+    if (!resetEmail.includes('@') || !resetEmail.includes('.')) {
+      setResetError('Введіть коректну адресу пошти')
+      return
+    }
 
+    try {
+      const res = await forgotPassword(resetEmail.trim())
+      if (res?.devCode) {
+        setDevCode(res.devCode)
+        setResetCode(res.devCode)
+      }
+      setResetMessage(res?.message || 'Код підтвердження надіслано на вашу пошту')
+      setResetStep(2)
+    } catch (error) {
+      setResetError(error.message || 'Не вдалося надіслати код підтвердження')
+    }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setResetMessage('')
+    setResetError('')
+
+    if (!resetCode.trim()) {
+      setResetError('Введіть 6-значний код підтвердження')
+      return
+    }
+    if (resetCode.trim().length !== 6) {
+      setResetError('Код підтвердження має містити 6 цифр')
+      return
+    }
     if (!resetNewPassword || resetNewPassword.length < 6) {
       setResetError('Пароль повинен містити щонайменше 6 символів')
       return
     }
 
     try {
-      await resetPassword({
-        email: resetEmail,
+      const res = await resetPassword({
+        email: resetEmail.trim(),
+        code: resetCode.trim(),
         newPassword: resetNewPassword,
       })
-      setResetMessage('Пароль успішно змінено!')
+      setLoginSuccessNotice(res?.message || 'Пароль успішно змінено! Тепер ви можете увійти.')
+      setIsResetMode(false)
+      setResetStep(1)
       setResetEmail('')
+      setResetCode('')
       setResetNewPassword('')
+      setDevCode('')
+      setResetMessage('')
+      setResetError('')
     } catch (error) {
       setResetError(error.message || 'Не вдалося змінити пароль')
     }
   }
 
+  const handleCancelReset = () => {
+    setIsResetMode(false)
+    setResetStep(1)
+    setResetEmail('')
+    setResetCode('')
+    setResetNewPassword('')
+    setDevCode('')
+    setResetMessage('')
+    setResetError('')
+  }
+
   const handleToggleMode = () => {
     setIsRegisterMode((prev) => !prev)
     setIsResetMode(false)
+    setResetStep(1)
     setName('')
     setEmail('')
     setPassword('')
@@ -59,6 +120,7 @@ export function LoginPage({ onLogin }) {
     setFormErrors({})
     setResetMessage('')
     setResetError('')
+    setLoginSuccessNotice('')
     clearError()
   }
 
@@ -75,8 +137,15 @@ export function LoginPage({ onLogin }) {
 
     if (!email.trim()) {
       errors.email = 'Будь ласка, введіть електронну пошту'
+    } else if (
+      isRegisterMode &&
+      !email.trim().toLowerCase().endsWith('@uzhnu.edu.ua') &&
+      !email.trim().toLowerCase().endsWith('@student.uzhnu.edu.ua')
+    ) {
+      errors.email =
+        'Реєстрація дозволена лише для поштових скриньок УжНУ (@uzhnu.edu.ua або @student.uzhnu.edu.ua)'
     } else if (!email.includes('@') || !email.includes('.')) {
-      errors.email = 'Введіть коректну адресу пошти (наприклад: example@email.com)'
+      errors.email = 'Введіть коректну адресу пошти'
     }
 
     if (!password) {
@@ -135,6 +204,7 @@ export function LoginPage({ onLogin }) {
     if (formErrors.email) {
       setFormErrors((prev) => ({ ...prev, email: null }))
     }
+    setLoginSuccessNotice('')
     clearError()
   }
 
@@ -143,6 +213,7 @@ export function LoginPage({ onLogin }) {
     if (formErrors.password) {
       setFormErrors((prev) => ({ ...prev, password: null }))
     }
+    setLoginSuccessNotice('')
     clearError()
   }
 
@@ -167,15 +238,17 @@ export function LoginPage({ onLogin }) {
           </h1>
           <p className={styles.subtitle}>
             {isResetMode
-              ? 'Введіть ваші дані для зміни пароля'
+              ? resetStep === 1
+                ? 'Введіть вашу електронну пошту для отримання коду підтвердження'
+                : 'Введіть код підтвердження та придумайте новий пароль'
               : isRegisterMode
                 ? 'Зареєструйтесь для доступу до додавання автомобілів'
                 : 'Авторизуйтесь для доступу до додавання авто'}
           </p>
         </div>
 
-        {isResetMode && (
-          <div className={styles.resetBox}>
+        {isResetMode && resetStep === 1 && (
+          <form className={styles.resetBox} onSubmit={handleRequestCode} noValidate>
             <div className={styles.fieldGroup}>
               <label className={styles.label} htmlFor="resetEmail">
                 Електронна пошта
@@ -189,8 +262,73 @@ export function LoginPage({ onLogin }) {
                   setResetError('')
                 }}
                 className={styles.input}
-                placeholder="example@email.com"
+                placeholder="example@student.uzhnu.edu.ua"
                 autoComplete="off"
+                required
+              />
+            </div>
+
+            {resetError && (
+              <div className={styles.errorBanner} role="alert">
+                <span>⚠️</span>
+                <span>{resetError}</span>
+              </div>
+            )}
+
+            {resetMessage && (
+              <div className={styles.successBanner} role="status">
+                <span>✓</span>
+                <span>{resetMessage}</span>
+              </div>
+            )}
+
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading ? 'Надсилання коду... ⏳' : 'Отримати код підтвердження →'}
+            </button>
+
+            <button
+              type="button"
+              className={styles.registerLink}
+              style={{ marginTop: '12px', display: 'block', width: '100%' }}
+              onClick={handleCancelReset}
+            >
+              Повернутися до входу
+            </button>
+          </form>
+        )}
+
+        {isResetMode && resetStep === 2 && (
+          <form className={styles.resetBox} onSubmit={handleResetPassword} noValidate>
+            <div style={{ fontSize: '0.8125rem', color: '#475569' }}>
+              Код надіслано на адресу: <strong>{resetEmail}</strong>
+            </div>
+
+            {devCode && (
+              <div className={styles.devBanner} role="status">
+                <span>🔑</span>
+                <span>
+                  Код підтвердження (тестовий режим): <strong>{devCode}</strong>
+                </span>
+              </div>
+            )}
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.label} htmlFor="resetCode">
+                Код підтвердження (6 цифр)
+              </label>
+              <input
+                id="resetCode"
+                type="text"
+                maxLength={6}
+                value={resetCode}
+                onChange={(e) => {
+                  setResetCode(e.target.value)
+                  setResetError('')
+                }}
+                className={styles.input}
+                placeholder="123456"
+                autoComplete="off"
+                required
               />
             </div>
 
@@ -210,6 +348,7 @@ export function LoginPage({ onLogin }) {
                 placeholder="Введіть новий пароль"
                 autoComplete="off"
                 data-lpignore="true"
+                required
               />
             </div>
 
@@ -227,29 +366,33 @@ export function LoginPage({ onLogin }) {
               </div>
             )}
 
-            <button
-              type="button"
-              className={styles.submitButton}
-              onClick={handleResetPassword}
-              disabled={isLoading}
-            >
-              Змінити пароль
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading ? 'Збереження пароля... ⏳' : 'Змінити пароль'}
             </button>
 
-            <button
-              type="button"
-              className={styles.registerLink}
-              style={{ marginTop: '12px', display: 'block', width: '100%' }}
-              onClick={() => {
-                setIsResetMode(false)
-                setResetEmail('')
-                setResetNewPassword('')
-                setResetMessage('')
-                setResetError('')
-              }}
-            >
-              Повернутися до входу
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px' }}>
+              <button
+                type="button"
+                className={styles.registerLink}
+                onClick={() => {
+                  setResetStep(1)
+                  setResetError('')
+                  setResetMessage('')
+                }}
+              >
+                ← Змінити пошту
+              </button>
+              <button type="button" className={styles.registerLink} onClick={handleCancelReset}>
+                Повернутися до входу
+              </button>
+            </div>
+          </form>
+        )}
+
+        {!isResetMode && loginSuccessNotice && (
+          <div className={styles.successBanner} role="status">
+            <span>✓</span>
+            <span>{loginSuccessNotice}</span>
           </div>
         )}
 
@@ -301,8 +444,14 @@ export function LoginPage({ onLogin }) {
                     className={styles.forgotLink}
                     onClick={() => {
                       setIsResetMode(true)
+                      setResetStep(1)
+                      setResetEmail(email || '')
+                      setResetCode('')
+                      setResetNewPassword('')
+                      setDevCode('')
                       setResetMessage('')
                       setResetError('')
+                      setLoginSuccessNotice('')
                       clearError()
                     }}
                   >

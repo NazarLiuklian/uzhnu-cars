@@ -4,6 +4,25 @@ import styles from './CarCard.module.css'
 export function CarCard({ car, showFavorite, onToggleFavorite, onDelete, onClick }) {
   const isFav = car.favorite
 
+  // Чистий тип палива
+  const rawFuel = car.fuel || car.fuel_type || car.engine || 'Бензин'
+  const cleanFuel =
+    rawFuel
+      .replace(/\s*\(.*?\)/g, '')
+      .replace(/\d+\s*к\.с\.?/gi, '')
+      .trim() || 'Бензин'
+
+  // Об'єм або батарея без к.с.
+  let volumeOrBattery = (car.engineVolume || car.engine_volume || '').trim()
+  if (!volumeOrBattery && car.engine && car.engine.includes('(')) {
+    const match = car.engine.match(/\(([^,)]+)/)
+    if (match) volumeOrBattery = match[1].trim()
+  }
+  volumeOrBattery = volumeOrBattery
+    .replace(/,\s*\d+\s*к\.с\.?/gi, '')
+    .replace(/\d+\s*к\.с\.?/gi, '')
+    .trim()
+
   return (
     <article
       className={styles.card}
@@ -47,9 +66,9 @@ export function CarCard({ car, showFavorite, onToggleFavorite, onDelete, onClick
       )}
 
       <div className={styles.imagePlaceholder}>
-        {car.imageUrl ? (
+        {car.imageUrl || car.image ? (
           <img
-            src={car.imageUrl}
+            src={car.imageUrl || car.image}
             alt={`${car.brand} ${car.model}`}
             className={styles.carImg}
             loading="lazy"
@@ -63,10 +82,11 @@ export function CarCard({ car, showFavorite, onToggleFavorite, onDelete, onClick
         <h3 className={styles.title}>
           {car.brand} {car.model}
         </h3>
-        <p className={styles.owner}>Власник: {car.owner}</p>
+        <p className={styles.owner}>Власник: {car.owner || car.teacher_name}</p>
         <div className={styles.tagsRow}>
-          <span className={styles.tag}>{car.faculty}</span>
-          <span className={styles.tag}>{car.fuel}</span>
+          <span className={styles.tag}>{car.faculty || car.department}</span>
+          <span className={styles.tag}>{cleanFuel}</span>
+          {volumeOrBattery && <span className={styles.tag}>{volumeOrBattery}</span>}
           <span className={styles.tag}>{car.year} р.</span>
         </div>
       </div>

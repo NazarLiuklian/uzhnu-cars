@@ -123,78 +123,101 @@ export function CatalogPage() {
         onClose={() => setSelectedCar(null)}
         title={selectedCar ? `${selectedCar.brand} ${selectedCar.model} (${selectedCar.year})` : ''}
       >
-        {selectedCar && (
-          <div className={styles.modalDetails}>
-            <div className={styles.modalImage}>
-              {selectedCar.imageUrl ? (
-                <img
-                  src={selectedCar.imageUrl}
-                  alt={`${selectedCar.brand} ${selectedCar.model}`}
-                  className={styles.modalImg}
-                />
-              ) : (
-                <span>{selectedCar.imageText || `[ Фото ${selectedCar.brand} ]`}</span>
-              )}
-            </div>
+        {selectedCar &&
+          (() => {
+            const rawFuel =
+              selectedCar.fuel || selectedCar.fuel_type || selectedCar.engine || 'Бензин'
+            const modalFuel =
+              rawFuel
+                .replace(/\s*\(.*?\)/g, '')
+                .replace(/\d+\s*к\.с\.?/gi, '')
+                .trim() || 'Бензин'
 
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Власник</span>
-                <span className={styles.detailValue}>{selectedCar.owner}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Кафедра</span>
-                <span className={styles.detailValue}>{selectedCar.faculty}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Рік випуску</span>
-                <span className={styles.detailValue}>{selectedCar.year} р.</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Тип палива</span>
-                <span className={styles.detailValue}>{selectedCar.fuel}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Трансмісія</span>
-                <span className={styles.detailValue}>
-                  {selectedCar.transmission || 'Автоматична'}
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Двигун / Батарея</span>
-                <span className={styles.detailValue}>{selectedCar.engineVolume || '2.0 л'}</span>
-              </div>
-              <div className={`${styles.detailItem} ${styles.detailFull}`}>
-                <span className={styles.detailLabel}>Нотатки та деталі</span>
-                <div className={styles.notesBox}>
-                  {selectedCar.notes ||
-                    'Автомобіль викладача Ужгородського університету. Додаткова інформація перевірена модератором.'}
+            let modalVolume = (selectedCar.engineVolume || selectedCar.engine_volume || '').trim()
+            if (!modalVolume && selectedCar.engine && selectedCar.engine.includes('(')) {
+              const match = selectedCar.engine.match(/\(([^,)]+)/)
+              if (match) modalVolume = match[1].trim()
+            }
+            modalVolume = modalVolume
+              .replace(/,\s*\d+\s*к\.с\.?/gi, '')
+              .replace(/\d+\s*к\.с\.?/gi, '')
+              .trim()
+
+            const hasNotes = Boolean(selectedCar.notes && selectedCar.notes.trim() !== '')
+
+            return (
+              <div className={styles.modalDetails}>
+                <div className={styles.modalImage}>
+                  {selectedCar.imageUrl || selectedCar.image ? (
+                    <img
+                      src={selectedCar.imageUrl || selectedCar.image}
+                      alt={`${selectedCar.brand} ${selectedCar.model}`}
+                      className={styles.modalImg}
+                    />
+                  ) : (
+                    <span>{selectedCar.imageText || `[ Фото ${selectedCar.brand} ]`}</span>
+                  )}
+                </div>
+
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Власник</span>
+                    <span className={styles.detailValue}>
+                      {selectedCar.owner || selectedCar.teacher_name}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Кафедра</span>
+                    <span className={styles.detailValue}>
+                      {selectedCar.faculty || selectedCar.department}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Рік випуску</span>
+                    <span className={styles.detailValue}>{selectedCar.year} р.</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Тип палива</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                      <span className={styles.detailValue}>{modalFuel}</span>
+                      {modalVolume && (
+                        <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>
+                          {modalVolume}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {hasNotes && (
+                    <div className={`${styles.detailItem} ${styles.detailFull}`}>
+                      <span className={styles.detailLabel}>Нотатки та деталі</span>
+                      <div className={styles.notesBox}>{selectedCar.notes.trim()}</div>
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.modalActions}>
+                  {isAuth ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleFavorite(selectedCar.id)}
+                      className={`${styles.favBtn} ${selectedCar.favorite ? styles.favActive : ''}`}
+                    >
+                      <span>{selectedCar.favorite ? '♥ В обраному' : '♡ Додати в обране'}</span>
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCar(null)}
+                    className={styles.closeModalBtn}
+                  >
+                    Закрити
+                  </button>
                 </div>
               </div>
-            </div>
-
-            <div className={styles.modalActions}>
-              {isAuth ? (
-                <button
-                  type="button"
-                  onClick={() => toggleFavorite(selectedCar.id)}
-                  className={`${styles.favBtn} ${selectedCar.favorite ? styles.favActive : ''}`}
-                >
-                  <span>{selectedCar.favorite ? '♥ В обраному' : '♡ Додати в обране'}</span>
-                </button>
-              ) : (
-                <span />
-              )}
-              <button
-                type="button"
-                onClick={() => setSelectedCar(null)}
-                className={styles.closeModalBtn}
-              >
-                Закрити
-              </button>
-            </div>
-          </div>
-        )}
+            )
+          })()}
       </Modal>
     </main>
   )

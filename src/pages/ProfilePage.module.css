@@ -26,6 +26,10 @@
   font-weight: 700;
   color: #0f172a;
   margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .successBanner {
@@ -174,7 +178,10 @@
 .actionsRow {
   padding-top: 1rem;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   border-top: 1px solid #f1f5f9;
   animation: fadeIn 0.2s ease-in-out;
 }
@@ -271,4 +278,195 @@
   .grid2 {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.adminSection {
+  margin-top: 2rem;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.adminHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 1rem;
+}
+
+.adminTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.adminBadge {
+  background-color: #fef08a;
+  color: #854d0e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pendingCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background-color: #f8fafc;
+  transition: all 0.15s ease-in-out;
+  min-width: 0;
+}
+
+.pendingCard:hover {
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+}
+
+@media (min-width: 640px) {
+  .pendingCard {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.pendingImageWrapper {
+  width: 100%;
+  height: 7rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: #e2e8f0;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .pendingImageWrapper {
+    width: 9rem;
+    height: 6rem;
+  }
+}
+
+.pendingImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pendingInfo {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pendingCarTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.pendingCarTeacher {
+  font-size: 0.875rem;
+  color: #334155;
+  margin: 0;
+}
+
+.pendingCarMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.pendingMetaBadge {
+  background-color: #e2e8f0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.pendingActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .pendingActions {
+    align-self: center;
+    margin-top: 0;
+  }
+}
+
+.approveBtn {
+  padding: 0.5rem 1rem;
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.approveBtn:hover:not(:disabled) {
+  background-color: #15803d;
+}
+
+.rejectBtn {
+  padding: 0.5rem 1rem;
+  background-color: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.rejectBtn:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.emptyPending {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
 }

@@ -25,7 +25,20 @@ export function useCars() {
     setError(null)
     try {
       const data = await api.getCars()
-      setCars(data)
+      let favIds = []
+      if (api.getToken()) {
+        try {
+          favIds = await api.getFavorites()
+        } catch {
+          favIds = []
+        }
+      }
+      const favSet = new Set(Array.isArray(favIds) ? favIds : [])
+      const carsWithFav = (data || []).map((car) => ({
+        ...car,
+        favorite: favSet.has(car.id),
+      }))
+      setCars(carsWithFav)
     } catch (err) {
       setError(err.message || 'Не вдалося завантажити список автомобілів')
     } finally {
@@ -38,12 +51,12 @@ export function useCars() {
   }, [fetchCars])
 
   const toggleFavorite = useCallback(async (carId) => {
-    let currentFav = false
+    let oldFav = false
     setCars((prev) =>
       prev.map((c) => {
         if (c.id === carId) {
-          currentFav = c.favorite
-          return { ...c, favorite: !c.favorite }
+          oldFav = Boolean(c.favorite)
+          return { ...c, favorite: !oldFav }
         }
         return c
       }),
@@ -54,13 +67,20 @@ export function useCars() {
     )
 
     try {
-      await api.toggleFavorite(carId, currentFav)
+      const res = await api.toggleFavorite(carId)
+      if (res && Array.isArray(res.favorites)) {
+        const favSet = new Set(res.favorites)
+        setCars((prev) =>
+          prev.map((c) => ({
+            ...c,
+            favorite: favSet.has(c.id),
+          })),
+        )
+      }
     } catch (err) {
       setError(err.message || 'Не вдалося оновити обране')
-      setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, favorite: currentFav } : c)))
-      setSelectedCar((prev) =>
-        prev && prev.id === carId ? { ...prev, favorite: currentFav } : prev,
-      )
+      setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, favorite: oldFav } : c)))
+      setSelectedCar((prev) => (prev && prev.id === carId ? { ...prev, favorite: oldFav } : prev))
     }
   }, [])
 
@@ -68,7 +88,9 @@ export function useCars() {
     setError(null)
     try {
       const created = await api.addCar(newCarData)
-      setCars((prev) => [created, ...prev])
+      if (created && created.status === 'published') {
+        setCars((prev) => [created, ...prev])
+      }
       return created
     } catch (err) {
       setError(err.message || 'Не вдалося додати автомобіль')
@@ -114,7 +136,10 @@ export function useCars() {
         return false
       }
 
-      if (selectedFuel && car.fuel !== selectedFuel) {
+      if (
+        selectedFuel &&
+        !(car.fuel || car.engine || '').toLowerCase().includes(selectedFuel.toLowerCase())
+      ) {
         return false
       }
 

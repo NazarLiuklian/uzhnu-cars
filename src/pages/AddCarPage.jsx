@@ -8,8 +8,6 @@ import { api } from '../services/api'
 import { compressImage } from '../utils/compressImage'
 import styles from './AddCarPage.module.css'
 
-const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1000'
-
 export function AddCarPage({ user: propUser }) {
   const navigate = useNavigate()
   const { user: authUser } = useAuth()
@@ -27,19 +25,20 @@ export function AddCarPage({ user: propUser }) {
   const [faculty, setFaculty] = useState('')
   const [carModel, setCarModel] = useState('')
   const [year, setYear] = useState('')
-  const [fuelType, setFuelType] = useState('diesel')
-  const [engineVolume, setEngineVolume] = useState('2.0 л або 64 кВт')
-  const [transmission, setTransmission] = useState('auto')
-  const [bodyColor, setBodyColor] = useState('Чорний, Сірий...')
+  const [fuelType, setFuelType] = useState('Бензин')
+  const [engineVolume, setEngineVolume] = useState('')
+  const [transmission, setTransmission] = useState('Автомат')
+  const [bodyColor, setBodyColor] = useState('')
   const [notes, setNotes] = useState('')
 
-  // 4.1. Додайте стани фото
+  // Стан фото автомобіля (обов'язкове)
   const [carImage, setCarImage] = useState('')
   const [isDraggingImage, setIsDraggingImage] = useState(false)
   const [imageError, setImageError] = useState('')
 
   // Form errors
   const [formErrors, setFormErrors] = useState({})
+  const [generalError, setGeneralError] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -51,11 +50,10 @@ export function AddCarPage({ user: propUser }) {
     }
   }, [activeUser?.email])
 
-  // 4.2. Додайте обробники файлу
   const processImageFile = async (file) => {
     if (!file) {
       setCarImage('')
-      setImageError('')
+      setImageError('Будь ласка, завантажте фотографію автомобіля')
       return
     }
 
@@ -69,6 +67,8 @@ export function AddCarPage({ user: propUser }) {
       const compressedImage = await compressImage(file)
       setCarImage(compressedImage)
       setImageError('')
+      setFormErrors((prev) => ({ ...prev, carImage: null }))
+      setGeneralError('')
     } catch (error) {
       setCarImage('')
       setImageError(error.message || 'Не вдалося обробити файл')
@@ -108,11 +108,35 @@ export function AddCarPage({ user: propUser }) {
     }
 
     if (!fuelType) {
-      errors.fuelType = 'Оберіть тип двигуна'
+      errors.fuelType = 'Оберіть тип палива'
+    }
+
+    if (!engineVolume.trim()) {
+      errors.engineVolume = 'Вкажіть обʼєм двигуна або ємність батареї'
+    }
+
+    if (!transmission) {
+      errors.transmission = 'Оберіть коробку передач'
+    }
+
+    if (!bodyColor.trim()) {
+      errors.bodyColor = 'Вкажіть колір кузова'
+    }
+
+    if (!carImage) {
+      errors.carImage = 'Фотографія автомобіля є обовʼязковою'
+      setImageError('Будь ласка, завантажте фотографію автомобіля')
     }
 
     setFormErrors(errors)
-    return Object.keys(errors).length === 0
+
+    if (Object.keys(errors).length > 0) {
+      setGeneralError('Будь ласка, заповніть усі обовʼязкові поля форми (позначені зірочкою *)')
+      return false
+    }
+
+    setGeneralError('')
+    return true
   }
 
   const handleSubmit = async (e) => {
@@ -125,33 +149,28 @@ export function AddCarPage({ user: propUser }) {
     setIsSubmitting(true)
 
     const title = `${carModel.trim()} (${year})`
-    const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Опубліковано щойно`
+    const subtitle = `Викладач: ${ownerName.trim()} • ${faculty} • Очікує модерації`
 
     try {
-      const fuelLabels = {
-        diesel: 'Дизель',
-        petrol: 'Бензин',
-        electro: 'Електро',
-        hybrid: 'Гібрид',
-        lpg: 'Газ / Бензин',
-      }
-      const transmissionLabels = {
-        auto: 'Автоматична (АКПП)',
-        manual: 'Механічна (МКПП)',
-        robot: 'Роботизована',
-      }
-
       const carData = {
         brand: carModel.split(' ')[0] || carModel,
         model: carModel.split(' ').slice(1).join(' ') || '',
-        year,
+        year: Number(year),
         faculty,
-        owner: ownerName,
-        fuel: fuelLabels[fuelType] || fuelType,
-        transmission: transmissionLabels[transmission] || transmission,
-        engineVolume,
-        imageUrl: carImage || DEFAULT_CAR_IMAGE,
-        notes,
+        department: faculty,
+        owner: ownerName.trim(),
+        teacher_name: ownerName.trim(),
+        fuel: fuelType,
+        fuel_type: fuelType,
+        engine: fuelType,
+        engineVolume: engineVolume.trim(),
+        engine_volume: engineVolume.trim(),
+        transmission,
+        color: bodyColor.trim(),
+        bodyColor: bodyColor.trim(),
+        imageUrl: carImage,
+        image: carImage,
+        notes: notes.trim(),
       }
 
       await addCar(carData)
@@ -167,20 +186,22 @@ export function AddCarPage({ user: propUser }) {
       setSubmittedMessage(true)
       setShowSuccessModal(true)
 
-      // Reset form fields
+      // Очищення форми
       setOwnerName('')
       setFaculty('')
       setCarModel('')
       setYear('')
+      setFuelType('Бензин')
+      setEngineVolume('')
+      setTransmission('Автомат')
+      setBodyColor('')
       setNotes('')
-      setFormErrors({})
-
-      // 4.4. Очистіть фото після відправлення
       setCarImage('')
       setImageError('')
+      setFormErrors({})
+      setGeneralError('')
 
       setTimeout(() => setSubmittedMessage(false), 5000)
-      navigate('/')
     } catch (err) {
       alert(err.message || 'Помилка при додаванні авто')
     } finally {
@@ -188,7 +209,7 @@ export function AddCarPage({ user: propUser }) {
     }
   }
 
-  const userEmail = activeUser?.email || 'student@uzhnu.edu.ua'
+  const userEmail = activeUser?.email || 'student@student.uzhnu.edu.ua'
 
   return (
     <main className={styles.main}>
@@ -197,7 +218,7 @@ export function AddCarPage({ user: propUser }) {
           <div>
             <h1 className={styles.title}>Запропонувати авто викладача</h1>
             <p className={styles.subtitle}>
-              Заповніть детальну інформацію про автомобіль для публікації в каталозі
+              Заповніть детальну інформацію про автомобіль для подання на модерацію
             </p>
           </div>
           <span className={styles.authorBadge}>
@@ -208,11 +229,11 @@ export function AddCarPage({ user: propUser }) {
 
         {submittedMessage && (
           <div className={styles.successMessage} role="status">
-            🎉 Дякуємо! Автомобіль &quot;{lastSubmittedTitle}&quot; одразу опубліковано в каталозі.
+            🎉 Дякуємо! Заявку відправлено на модерацію адміністратору.
           </div>
         )}
 
-        <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <form className={styles.form} onSubmit={handleSubmit} noValidate autoComplete="off">
           {/* Section 1 */}
           <div className={styles.section}>
             <h3 className={styles.sectionHeading}>
@@ -227,11 +248,13 @@ export function AddCarPage({ user: propUser }) {
                 <input
                   id="ownerName"
                   type="text"
+                  autoComplete="off"
                   placeholder="Наприклад: Бучук Роман Юрійович"
                   value={ownerName}
                   onChange={(e) => {
                     setOwnerName(e.target.value)
                     if (formErrors.ownerName) setFormErrors((p) => ({ ...p, ownerName: null }))
+                    setGeneralError('')
                   }}
                   className={`${styles.input} ${formErrors.ownerName ? styles.inputError : ''}`}
                   required
@@ -252,6 +275,7 @@ export function AddCarPage({ user: propUser }) {
                   onChange={(e) => {
                     setFaculty(e.target.value)
                     if (formErrors.faculty) setFormErrors((p) => ({ ...p, faculty: null }))
+                    setGeneralError('')
                   }}
                   className={`${styles.select} ${formErrors.faculty ? styles.inputError : ''}`}
                   required
@@ -285,11 +309,13 @@ export function AddCarPage({ user: propUser }) {
                 <input
                   id="carModel"
                   type="text"
+                  autoComplete="off"
                   placeholder="Наприклад: Volkswagen Passat B8"
                   value={carModel}
                   onChange={(e) => {
                     setCarModel(e.target.value)
                     if (formErrors.carModel) setFormErrors((p) => ({ ...p, carModel: null }))
+                    setGeneralError('')
                   }}
                   className={`${styles.input} ${formErrors.carModel ? styles.inputError : ''}`}
                   required
@@ -306,6 +332,7 @@ export function AddCarPage({ user: propUser }) {
                 <input
                   id="year"
                   type="number"
+                  autoComplete="off"
                   placeholder="Наприклад: 2019"
                   min="1990"
                   max="2026"
@@ -313,6 +340,7 @@ export function AddCarPage({ user: propUser }) {
                   onChange={(e) => {
                     setYear(e.target.value)
                     if (formErrors.year) setFormErrors((p) => ({ ...p, year: null }))
+                    setGeneralError('')
                   }}
                   className={`${styles.input} ${formErrors.year ? styles.inputError : ''}`}
                   required
@@ -330,65 +358,100 @@ export function AddCarPage({ user: propUser }) {
             <div className={styles.grid4}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="fuelType">
-                  5. Тип двигуна / палива <span className={styles.requiredStar}>*</span>
+                  5. Тип палива <span className={styles.requiredStar}>*</span>
                 </label>
                 <select
                   id="fuelType"
                   value={fuelType}
-                  onChange={(e) => setFuelType(e.target.value)}
+                  onChange={(e) => {
+                    setFuelType(e.target.value)
+                    if (formErrors.fuelType) setFormErrors((p) => ({ ...p, fuelType: null }))
+                    setGeneralError('')
+                  }}
                   className={styles.select}
                   required
                 >
-                  <option value="diesel">Дизель</option>
-                  <option value="petrol">Бензин</option>
-                  <option value="electro">Електромобіль (EV)</option>
-                  <option value="hybrid">Гібрид (PHEV/HEV)</option>
-                  <option value="lpg">Газ / Бензин</option>
+                  <option value="Бензин">Бензин</option>
+                  <option value="Дизель">Дизель</option>
+                  <option value="Електро">Електро</option>
+                  <option value="Гібрид">Гібрид</option>
                 </select>
+                {formErrors.fuelType && (
+                  <span className={styles.fieldError}>{formErrors.fuelType}</span>
+                )}
               </div>
 
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="engineVolume">
-                  6. Об&apos;єм / батарея
+                  6. Об&apos;єм / батарея <span className={styles.requiredStar}>*</span>
                 </label>
                 <input
                   id="engineVolume"
                   type="text"
-                  placeholder="2.0 л або 64 кВт"
+                  autoComplete="off"
+                  placeholder=""
                   value={engineVolume}
-                  onChange={(e) => setEngineVolume(e.target.value)}
-                  className={styles.input}
+                  onChange={(e) => {
+                    setEngineVolume(e.target.value)
+                    if (formErrors.engineVolume) {
+                      setFormErrors((p) => ({ ...p, engineVolume: null }))
+                    }
+                    setGeneralError('')
+                  }}
+                  className={`${styles.input} ${formErrors.engineVolume ? styles.inputError : ''}`}
+                  required
                 />
+                {formErrors.engineVolume && (
+                  <span className={styles.fieldError}>{formErrors.engineVolume}</span>
+                )}
               </div>
 
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="transmission">
-                  7. Коробка передач
+                  7. Коробка передач <span className={styles.requiredStar}>*</span>
                 </label>
                 <select
                   id="transmission"
                   value={transmission}
-                  onChange={(e) => setTransmission(e.target.value)}
+                  onChange={(e) => {
+                    setTransmission(e.target.value)
+                    if (formErrors.transmission) {
+                      setFormErrors((p) => ({ ...p, transmission: null }))
+                    }
+                    setGeneralError('')
+                  }}
                   className={styles.select}
+                  required
                 >
-                  <option value="auto">Автоматична (АКПП)</option>
-                  <option value="manual">Механічна (МКПП)</option>
-                  <option value="robot">Роботизована</option>
+                  <option value="Автомат">Автомат</option>
+                  <option value="Механіка">Механіка</option>
                 </select>
+                {formErrors.transmission && (
+                  <span className={styles.fieldError}>{formErrors.transmission}</span>
+                )}
               </div>
 
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="bodyColor">
-                  8. Колір кузова
+                  8. Колір кузова <span className={styles.requiredStar}>*</span>
                 </label>
                 <input
                   id="bodyColor"
                   type="text"
-                  placeholder="Чорний, Сірий..."
+                  autoComplete="off"
+                  placeholder=""
                   value={bodyColor}
-                  onChange={(e) => setBodyColor(e.target.value)}
-                  className={styles.input}
+                  onChange={(e) => {
+                    setBodyColor(e.target.value)
+                    if (formErrors.bodyColor) setFormErrors((p) => ({ ...p, bodyColor: null }))
+                    setGeneralError('')
+                  }}
+                  className={`${styles.input} ${formErrors.bodyColor ? styles.inputError : ''}`}
+                  required
                 />
+                {formErrors.bodyColor && (
+                  <span className={styles.fieldError}>{formErrors.bodyColor}</span>
+                )}
               </div>
             </div>
           </div>
@@ -399,13 +462,15 @@ export function AddCarPage({ user: propUser }) {
               <span>📸 4. Медіаматеріали та додаткові нотатки</span>
             </h3>
 
-            {/* 4.5. Замініть блок завантаження фото */}
+            {/* Блок завантаження фото (обов'язкове) */}
             <div className={styles.field}>
               <label className={styles.label}>
-                9. Фотографія автомобіля (бажано на території УжНУ)
+                9. Фотографія автомобіля <span className={styles.requiredStar}>*</span>
               </label>
               <div
-                className={`${styles.uploadZone} ${isDraggingImage ? styles.uploadZoneActive : ''}`}
+                className={`${styles.uploadZone} ${isDraggingImage ? styles.uploadZoneActive : ''} ${
+                  formErrors.carImage || imageError ? styles.inputError : ''
+                }`}
                 onDragOver={(e) => {
                   e.preventDefault()
                   setIsDraggingImage(true)
@@ -440,7 +505,7 @@ export function AddCarPage({ user: propUser }) {
                     <div className={styles.uploadIcon}>+</div>
                     <p className={styles.uploadText}>Натисніть або перетягніть фото авто сюди</p>
                     <p className={styles.uploadHint}>
-                      Підтримуються формати JPG, PNG, WEBP до 10 МБ
+                      Підтримуються формати JPG, PNG, WEBP до 10 МБ (обовʼязково)
                     </p>
                   </>
                 )}
@@ -452,17 +517,20 @@ export function AddCarPage({ user: propUser }) {
                 )}
               </div>
 
-              {imageError && <span className={styles.fieldError}>{imageError}</span>}
+              {(imageError || formErrors.carImage) && (
+                <span className={styles.fieldError}>{imageError || formErrors.carImage}</span>
+              )}
             </div>
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="notes">
-                Додаткові особливості / Комплектація / Де помічено
+                Додаткові особливості / Комплектація / Де помічено (необовʼязково)
               </label>
               <textarea
                 id="notes"
                 rows={3}
-                placeholder="Наприклад: авто часто паркується біля головного корпусу на БАМі, має панорамний дах..."
+                autoComplete="off"
+                placeholder="Залиште додаткові нотатки за бажанням..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className={styles.textarea}
@@ -470,8 +538,24 @@ export function AddCarPage({ user: propUser }) {
             </div>
           </div>
 
+          {generalError && (
+            <div
+              style={{
+                color: '#e11d48',
+                backgroundColor: '#fff1f2',
+                border: '1px solid #fecdd3',
+                padding: '0.75rem 1rem',
+                borderRadius: '0.75rem',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+              }}
+            >
+              ⚠️ {generalError}
+            </div>
+          )}
+
           <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-            <span>{isSubmitting ? 'Публікація авто... ⏳' : 'Опублікувати авто'}</span>
+            <span>{isSubmitting ? 'Надсилання заявки... ⏳' : 'Надіслати на модерацію'}</span>
             {!isSubmitting && <span>🚀</span>}
           </button>
         </form>
@@ -497,20 +581,26 @@ export function AddCarPage({ user: propUser }) {
       {/* Success Modal */}
       <Modal
         isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title="Автомобіль опубліковано"
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/')
+        }}
+        title="Заявку відправлено на модерацію"
       >
         <div className={styles.modalSuccessContent}>
           <div className={styles.successIconBadge}>✓</div>
-          <h4 className={styles.modalSuccessTitle}>Автомобіль опубліковано!</h4>
+          <h4 className={styles.modalSuccessTitle}>Заявку успішно надіслано!</h4>
           <p className={styles.modalSuccessText}>
-            Вашу пропозицію <strong>&quot;{lastSubmittedTitle}&quot;</strong> додано до каталогу та
-            історії пропозицій зі статусом «Опубліковано».
+            Заявку щодо автомобіля <strong>&quot;{lastSubmittedTitle}&quot;</strong> відправлено на
+            модерацію адміністратору. Після перевірки автомобіль зʼявиться в каталозі.
           </p>
           <button
             type="button"
             className={styles.modalOkBtn}
-            onClick={() => setShowSuccessModal(false)}
+            onClick={() => {
+              setShowSuccessModal(false)
+              navigate('/')
+            }}
           >
             Зрозуміло
           </button>
